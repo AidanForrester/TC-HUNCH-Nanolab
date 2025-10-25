@@ -45,7 +45,7 @@ with open(path,'w') as f:
     f.write('\n'.join("end"))
 
 ##Right Side Moisture/Time Graph
-fig, mg1 = plt.subplots()
+fig, mg = plt.subplots()
 
 with open(current_time + "moisturedata.txt", "r") as file_object:
     computingdata = file_object.readlines()
@@ -57,29 +57,18 @@ for i in computingdata:
         m1.append(i)
 
 s = np.arrange(range(0, 5.18, 0.2))
-t = np.arrange(int(m1))
-
-mg1.plot(s,t)
-mg1.set(xlabel="Time (s)", ylabel="Right Moisture Sensor Reading (mV)", title="Right Moisture Sensor Readings Over Time")
-mg1.grid()
-fig.savefig(current_time + "rmoisturegraph.png")
-
-##Left Side Moisture/Time Graph
-fig, mg2 = plt.subplots()
-
-with open(current_time + "moisturedata.txt", "r") as file_object:
-    computingdata1 = file_object.readlines()
+e = np.arrange(int(m1))
 
 m2 = []
 
-for i in computingdata1:
+for i in computingdata:
     if i % 3 == 1:
         m2.append(i)
 
-s = np.arrange(range(0, 5.18, 0.2))
 t = np.arrange(int(m2))
 
-mg2.plot(s,t)
-mg2.set(xlabel="Time (s)", ylabel="Right Moisture Sensor Reading (mV)", title="Left Moisture Sensor Readings Over Time")
-mg2.grid()
-fig.savefig(current_time + "lmoisturegraph.png")
+mg.plot(s,e, label='Right Moisture Sensor', color=r)
+mg.plot(s,t, label='Left Moisture Sensor', color=b)
+mg.set(xlabel="Time (s)", ylabel="Moisture Sensor Reading (mV)", title="Moisture Readings Over Time")
+mg.grid()
+fig.savefig(current_time + "moisturegraph.png")
