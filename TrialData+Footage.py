@@ -6,6 +6,7 @@ import os
 
 import ADS1x15
 import adafruit_ccs811
+from adafruit_bme280 import basic as adafruit_bme280
 from picamzero import Camera
 
 import matplotlib.pyplot as plt
@@ -18,13 +19,14 @@ ADS.setComparatorThresholdLow( 1.5 / f )
 ADS.setComparatorThresholdHigh( 3 / f )
 
 i2c_bus = board.I2C()
-ccs811 = adafruit_ccs811.CCS811(i2c_bus)
-ccs811 = adafruit_ccs811.CCS811(i2c, address=0x5B)
+ccs811 = adafruit_ccs811.CCS811(i2c_bus, address=0x5B)
+bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c_bus, address=0X77)
 
 current_time = datetime.now()
 home_dir = os.environ['HOME'] 
 cam = Camera()
-cam.annotate(current_time)
+cam.annotate(current_time + " - Internal Temperature: " + bme280.temperataure + " °C - Relative Humidity: " + bme280.relative_humidity + "% - Internal Co2:" + ccs811.eco2 + " ppm")
+
 
 path = "Desktop/" + current_time + "moisturedata.txt"
 with open(path,'w') as f:
@@ -77,6 +79,6 @@ t = np.arrange(int(m2))
 
 mg.plot(s,e, label='Right Moisture Sensor', color=r)
 mg.plot(s,t, label='Left Moisture Sensor', color=b)
-mg.set(xlabel="Time (s)", ylabel="Moisture Sensor Reading (mV)", title="Moisture Readings Over Time")
+mg.set(xlabel="Time (s)", ylabel="Moisture Sensor Reading (mV)", title="Moisture Readings Over Time/nInternal Temperature: " + bme280.temperataure + " °C - Relative Humidity: " + bme280.relative_humidity + "% - Internal Co2:" + ccs811.eco2 + " ppm")
 mg.grid()
 fig.savefig(current_time + "moisturegraph.png")
