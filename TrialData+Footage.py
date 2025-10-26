@@ -12,15 +12,14 @@ from picamzero import Camera
 import matplotlib.pyplot as plt
 import numpy as np
 
+i2c_bus = board.I2C()
+ccs811 = adafruit_ccs811.CCS811(i2c_bus, address=0x5B)
+bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c_bus, address=0X77)
 ADS = ADS1x15.ADS1115(1, 0X48)
 
 f = ADS.toVoltage()
 ADS.setComparatorThresholdLow( 1.5 / f )
 ADS.setComparatorThresholdHigh( 3 / f )
-
-i2c_bus = board.I2C()
-ccs811 = adafruit_ccs811.CCS811(i2c_bus, address=0x5B)
-bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c_bus, address=0X77)
 
 current_time = datetime.now()
 home_dir = os.environ['HOME'] 
