@@ -1,17 +1,25 @@
 import threading
 import board
 import digitalio
-from adafruit_seesaw.seesaw import Seesaw
-from picamzero import Camera
 from datetime import datetime
 import os
+
+import ADS1x15
+import adafruit_ccs811
+from picamzero import Camera
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+ADS = ADS1x15.ADS1115(1, 0X48)
+
+f = ADS.toVoltage()
+ADS.setComparatorThresholdLow( 1.5 / f )
+ADS.setComparatorThresholdHigh( 3 / f )
+
 i2c_bus = board.I2C()
-ss1 = Seesaw(i2c_bus, addr=XXXX)
-ss2 = Seesaw(i2c_bus, addr=XXXX)
+ccs811 = adafruit_ccs811.CCS811(i2c_bus)
+ccs811 = adafruit_ccs811.CCS811(i2c, address=0x5B)
 
 current_time = datetime.now()
 home_dir = os.environ['HOME'] 
@@ -33,8 +41,8 @@ if signalstart == 1:
 while digitalRead(signalstart) == 1:
     for i in range(26):
         timer = threading.Timer(.2, callback)
-        moist1 = ss1.moisture_read()
-        moist2 = ss2.moisture_read()
+        moist1 = ADS.readADC(0)
+        moist2 = ADS.readADC(1)
         path = "Desktop/" + current_time + "moisturedata.txt"
         with open(path,'w') as f:
             f.write('\n'.join(moist1, moist2, ""))
@@ -44,7 +52,7 @@ path = "Desktop/" + current_time + "moisturedata.txt"
 with open(path,'w') as f:
     f.write('\n'.join("end"))
 
-##Right Side Moisture/Time Graph
+##3Moisture/Time Graph
 fig, mg = plt.subplots()
 
 with open(current_time + "moisturedata.txt", "r") as file_object:
