@@ -52,7 +52,7 @@ path = "Desktop/" + current_time + "moisturedata.txt"
 with open(path,'w') as f:
     f.write('\n'.join("end"))
 
-##3Moisture/Time Graph
+##Moisture/Time Graph
 fig, mg = plt.subplots()
 
 with open(current_time + "moisturedata.txt", "r") as file_object:
