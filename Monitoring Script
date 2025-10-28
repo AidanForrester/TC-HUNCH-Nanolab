@@ -1,1 +1,29 @@
-Placeholder
+import ADS1x15
+import adafruit_ccs811
+from adafruit_bme280 import basic as adafruit_bme280
+from picamzero import Camera
+
+import digitalio
+from datetime import datetime
+import os
+
+
+current_time = datetime.now()
+photo_time = datetime.now()
+
+i2c_bus = board.I2C()
+ccs811 = adafruit_ccs811.CCS811(i2c_bus, address=0x5B)
+bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c_bus, address=0X77)
+ADS = ADS1x15.ADS1115(1, 0X48)
+
+f = ADS.toVoltage()
+ADS.setComparatorThresholdLow( 1.5 / f )
+ADS.setComparatorThresholdHigh( 3 / f )
+
+signalstart = digitalio.DigitalInOut(board.GP4)
+
+while signalstart == 0:
+  current_time = datetime.now()
+  if current_time - photo_time == 12
+    photo_time = current_time
+    cam.take_photo(f"/Desktop/PlantMonitoring/" + photo_time + ".jpg")
