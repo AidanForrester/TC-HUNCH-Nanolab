@@ -24,9 +24,13 @@
     }
 
     nav a {
+      position: relative;
       text-decoration: none;
-      color: rgb(255, 255, 255); /*nav page Color*/
+      color: white;
       font-weight: bold;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
     }
 
     /*main Conent */
@@ -48,6 +52,28 @@
       font-weight: normal;    /* boldness */
       line-height: 1;       /*  spacing between lines */
       text-align: justify;    /* aligns text  */
+    }
+    /* Underline effect */
+    nav a::after {
+      content: "";
+      position: absolute;
+      bottom: 4px;
+      left: 10%;
+      width: 0%;
+      height: 2px;
+      background-color: #FFD700;
+      transition: width 0.3s ease;
+    }
+
+    /* hover animation */
+    nav a:hover {
+      color: #FFD700; /* Gold text color  */
+      background-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 10px #fad503;
+    }
+
+    nav a:hover::after {
+      width: 80%;
     }
 
   </style>
