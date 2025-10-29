@@ -3,7 +3,7 @@
 ## Instalation Instructions
 
 1. Flash the Pi with a 64 bit Version of Raspberry Pi OS
-2. Clone the reposatory using `https://github.com/AidanForrester/TC-HUNCH-Nanolab.git`
+2. Clone the Repo using `https://github.com/AidanForrester/TC-HUNCH-Nanolab.git`
 3. Open the diretory using `cd TC-HUNCH-Nanolab`
 4. Designate the Dependency Installer an Executable `chmod +x InstallScript.sh`
 5. Run the Install Script `./InstallScript.sh`
