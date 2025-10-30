@@ -1,77 +1,126 @@
-*{
-  margin: 0;
-  padding: 0;
+/* ===========================
+   GLOBAL RESETS
+=========================== */
+* {
+  margin: 0;           /* Removes default browser margins */
+  padding: 0;          /* Removes default browser padding */
 }
-body{
-  min-height: 100vh;
-  background: url('/V2/images/nasarocket.jpg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
+
+/* ===========================
+   BODY STYLING
+=========================== */
+body {
+  min-height: 100vh;   /* Ensures body fills at least the full viewport height */
+  
+  /* Background image setup */
+  background: url('/V2/images/nasarocket.jpg'); /* Sets NASA rocket image as background */
+  background-size: cover;       /* Scales the image to cover entire background */
+  background-repeat: no-repeat; /* Prevents image tiling */
+  background-position: center;  /* Centers the image on the page */
+
+  /* Font styling */
   font-family: Arial, sans-serif, 'Times New Roman', Times, serif;
 }
-nav{
-  background-color: white;
-  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.1);
+
+/* ===========================
+   NAVIGATION BAR STYLING
+=========================== */
+nav {
+  background-color: white;                           /* White navigation background */
+  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.1);        /* Subtle shadow for depth */
 }
-nav ul{
+
+/* Navigation list layout */
+nav ul {
+  width: 100%;                                       /* Make nav take full width */
+  list-style: none;                                  /* Remove bullets from list items */
+  display: flex;                                     /* Flexbox for horizontal layout */
+  justify-content: flex-end;                         /* Push items to the right side */
+  align-items: center;                               /* Vertically center nav items */
+}
+
+/* Each navigation list item */
+nav li {
+  height: 50px;                                      /* Set consistent nav item height */
+}
+
+/* Navigation links */
+nav a {
+  height: 100%;                                      /* Link fills full height of <li> */
+  padding: 0 30px;                                   /* Space around text inside links */
+  text-decoration: none;                             /* Remove underlines */
+  display: flex;                                     /* Allows vertical centering */
+  align-items: center;                               /* Centers link text vertically */
+  color: black;                                      /* Link text color */
+}
+
+/* Hover effect for links */
+nav a:hover {
+  background-color: #f0f0f0;                         /* Light gray background on hover */
+}
+
+/* The very first <li> (usually logo/title) */
+nav li:first-child {
+  margin-right: auto;                                /* Pushes all other items to right */
+}
+
+/* ===========================
+   SIDEBAR (MOBILE NAV)
+=========================== */
+.sidebar {
+  position: fixed;                                   /* Fixed position (stays while scrolling) */
+  top: 0;                                            /* Start from top of the page */
+  right: 0;                                          /* Positioned on the right edge */
+  height: 100vh;                                     /* Full viewport height */
+  width: 250px;                                      /* Sidebar width */
+  
+  /* Glass-like style */
+  background-color: rgba(255, 255, 255, 0.596);      /* Semi-transparent white background */
+  backdrop-filter: blur(12px);                       /* Blurred glass effect */
+  
+  box-shadow: -10px 0 10px rgba(0, 0, 0, 0.1);       /* Shadow to separate from page */
+  
+  list-style: none;                                  /* No bullets */
+  display: none;                                     /* Hidden by default (shown via JS) */
+  flex-direction: column;                            /* Stack links vertically */
+  align-items: flex-start;                           /* Align links to left inside sidebar */
+  justify-content: flex-start;                       /* Start content from top */
+}
+
+/* Sidebar list items take full width */
+.sidebar li {
   width: 100%;
-  list-style: none;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
 }
-nav li{
-  height: 50px;
-}
-nav a{
-  height: 100%;
-  padding: 0 30px;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  color: black;
-}
-nav a:hover{
-  background-color: #f0f0f0;
-}
-nav li:first-child{
-  margin-right: auto;
-}
-.sidebar{
-  position: fixed;
-  top: 0; 
-  right: 0;
-  height: 100vh;
-  width: 250px;
-  background-color: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
-  box-shadow: -10px 0 10px rgba(0, 0, 0, 0.1);
-  list-style: none;
-  display: none;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-}
-.sidebar li{
+
+/* Sidebar links stretch to full width */
+.sidebar a {
   width: 100%;
 }
-.sidebar a{
-  width: 100%;
+
+/* ===========================
+   MENU BUTTON (HAMBURGER ICON)
+=========================== */
+.menu-button {
+  display: none;                                     /* Hidden by default (only visible on mobile) */
 }
-.menu-button{
-  display: none;
-}
-@media(max-width: 1115px){
-  .hideOnMobile{
-    display: none;
+
+/* ===========================
+   RESPONSIVE DESIGN
+=========================== */
+
+/* For smaller screens (below 1320px wide) */
+@media (max-width: 1320px) {
+  .hideOnMobile {
+    display: none;                                   /* Hide normal nav links */
   }
-  .menu-button{
-    display: block;
+  .menu-button {
+    display: block;                                  /* Show hamburger icon */
   }
 }
-@media(max-width: 400px){
-  .sidebar{
-    width: 100%;
+
+/* For very small screens (below 500px wide) */
+@media (max-width: 500px) {
+  .sidebar {
+    width: 100%;                                     /* Sidebar takes full screen width */
   }
 }
