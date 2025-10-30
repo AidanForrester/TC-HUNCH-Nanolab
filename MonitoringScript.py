@@ -33,6 +33,7 @@ righthighwater = 0
 lowtemp = 0
 hightemp = 0
 errorreset = 0
+systemhealthy = 1
 
 signalstart = digitalio.DigitalInOut(board.GP4) ##Initialize starting signal pin
 
@@ -40,6 +41,8 @@ while signalstart == 0: ##While a trial is not happening
   current_time = datetime.now() ##Read sensors and time
   moistr = ADS.readADC(0)
   moistl = ADS.readADC(1)
+  acctemp = bme280.temperature
+  errorcheck = leftlowwater + lefthighwater + rightlowwater + righthighwater + lowtemp + hightemp ##Checks if the system has any errors
   if current_time - photo_time == 12 ##If it has been 12 hours since the last photo
     photo_time = current_time ##Take a photo and annotate it
     cam.annotate(photo_time + " - Internal Temperature: " + bme280.temperataure + " °C - Relative Humidity: " + bme280.relative_humidity + "% - Internal Co2:" + ccs811.eco2 + " ppm")
@@ -67,3 +70,7 @@ while signalstart == 0: ##While a trial is not happening
     righthighwater = 0
     lowtemp = 0
     hightemp = 0
+  if errorcheck != 0
+    systemhealthy = 1
+  else 
+    systemhealthy = 0
