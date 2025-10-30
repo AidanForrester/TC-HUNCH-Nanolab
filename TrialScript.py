@@ -24,8 +24,7 @@ ADS.setComparatorThresholdHigh( 3 / f )
 current_time = datetime.now()
 home_dir = os.environ['HOME'] 
 cam = Camera()
-cam.annotate(current_time + " - Internal Temperature: " + bme280.temperataure + " °C - Relative Humidity: " + bme280.relative_humidity + "% - Internal Co2:" + ccs811.eco2 + " ppm")
-
+cam.annotate(f"{current_time} - Internal Temperature: {bme280.temperature:.2f} °C - Relative Humidity: {bme280.relative_humidity:.2f}% - Internal CO2: {ccs811.eco2} ppm")
 
 path = "Desktop/" + current_time + "moisturedata.txt"
 with open(path,'w') as f:
@@ -33,51 +32,53 @@ with open(path,'w') as f:
 
 signalstart = digitalio.DigitalInOut(board.GP4)
 
-if signalstart == 1:
-    cam.record_video(f"{home_dir}/Desktop/" + current_time + "trial.mp4", duration=5.18)
+if signalstart.value == 1:
+    cam.record_video(f"{home_dir}/Desktop/TrialFootage" + current_time + "trial.mp4", duration=5.18)
     path = "Desktop/footage.txt"
     with open(path,'w') as f:
-        f.write('\n'.join(current_time, "/Desktop/" + current_time + "trial.mp4", "/Desktop/" + current_time + "moisturedata.txt", ""))
-
-while digitalRead(signalstart) == 1:
+                f.write('\n'.join([str(current_time),
+                           f"/Desktop/{current_time}_trial.mp4",
+                           f"/Desktop/{current_time}_moisturedata.txt", ""]))
+        
+while signalstart.value == 1:
     for i in range(26):
-        timer = threading.Timer(.2, callback)
+        time.sleep(.2)
         moist1 = ADS.readADC(0)
         moist2 = ADS.readADC(1)
-        path = "Desktop/" + current_time + "moisturedata.txt"
+        path = os.path.join(home_dir, "Desktop", f"{current_time}_moisturedata.txt")
         with open(path,'w') as f:
-            f.write('\n'.join(moist1, moist2, ""))
+            f.write('\n'.join([str(moist1), str(moist2), ""]))
         timer.start()
 
-path = "Desktop/" + current_time + "moisturedata.txt"
-with open(path,'w') as f:
-    f.write('\n'.join("end"))
+path = os.path.join(home_dir, "Desktop", f"{current_time}_moisturedata.txt")
+with open(path,'a') as f:
+    f.write("end\n")
 
 ##Moisture/Time Graph
 fig, mg = plt.subplots()
 
-with open(current_time + "moisturedata.txt", "r") as file_object:
+with open(os.path.join(home_dir, "Desktop", f"{current_time}_moisturedata.txt"), "r") as file_object:
     computingdata = file_object.readlines()
 
 m1 = []
 
-for i in computingdata:
-    if i % 3 == 0:
-        m1.append(i)
+for idx, i in enumerate(computingdata):
+    if idx % 3 == 0:
+        m1.append(float(i.strip()))
 
 s = np.arrange(range(0, 5.18, 0.2))
 e = np.arrange(int(m1))
 
 m2 = []
 
-for i in computingdata:
-    if i % 3 == 1:
-        m2.append(i)
+for idx, i in enumerate(computingdata):
+    if idx % 3 == 1:
+        m1.append(float(i.strip()))
 
 t = np.arrange(int(m2))
 
-mg.plot(s,e, label='Right Moisture Sensor', color=r)
-mg.plot(s,t, label='Left Moisture Sensor', color=b)
-mg.set(xlabel="Time (s)", ylabel="Moisture Sensor Reading (mV)", title="Moisture Readings Over Time/nInternal Temperature: " + bme280.temperataure + " °C - Relative Humidity: " + bme280.relative_humidity + "% - Internal Co2:" + ccs811.eco2 + " ppm")
+mg.plot(s,e, label='Right Moisture Sensor', color='r')
+mg.plot(s,t, label='Left Moisture Sensor', color='b')
+title=f"Moisture Readings Over Time (1.5-3V)\nInternal Temperature: {bme280.temperature:.2f} °C - Relative Humidity: {bme280.relative_humidity:.2f}% - Internal CO2: {ccs811.eco2} ppm")
 mg.grid()
-fig.savefig(current_time + "moisturegraph.png")
+fig.savefig(os.path.join(home_dir, "Desktop", f"{current_time}_moisturegraph.png"))
