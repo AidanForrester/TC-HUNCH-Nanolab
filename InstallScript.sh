@@ -1,8 +1,7 @@
 #!/bin/bash
 sudo apt update
-sudo apt install python3-picamzero
-sudo pip install Adafruit-Blinka
-sudo pip3 install adafruit-circuitpython-ccs811
-sudo pip3 install adafruit-circuitpython-bme280
-sudo pip3 install ADS1x15-ADC
-sudo pip install Flask
+
+sudo apt install -y python3-pip python3-picamzero
+
+pip3 install --upgrade pip
+pip3 install Adafruit-Blinka adafruit-circuitpython-ccs811 adafruit-circuitpython-bme280 adafruit-ads1x15 Flask
