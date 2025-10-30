@@ -5,3 +5,4 @@ sudo pip install Adafruit-Blinka
 sudo pip3 install adafruit-circuitpython-ccs811
 sudo pip3 install adafruit-circuitpython-bme280
 sudo pip3 install ADS1x15-ADC
+sudo pip install Flask
