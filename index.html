@@ -112,6 +112,29 @@
       const sidebar = document.querySelector('.sidebar')
       sidebar.style.display = 'none'
     }
-  </script>
+    async function updateData() { //Data collection and Updating
+      try {
+        //Connect to sensor functions in MonitoringScript.py
+        document.getElementById("temp").innerHTML = await (await fetch("/temp")).text();
+        document.getElementById("lmoist").innerHTML = await (await fetch("/lmoist")).text();
+        document.getElementById("rmoist").innerHTML = await (await fetch("/rmoist")).text();
+        document.getElementById("eco2").innerHTML = await (await fetch("/eco2")).text();
+        document.getElementById("health").innerHTML = await (await fetch("/health")).text();
+      }
+      catch (err) {
+        console.error("Error Updating Sensor Data, Please Check System | Error:", err);
+      }
+    }
+
+    updateData(); //Initial Sensor Pull
+    setInterval(updateData, 3000); //Update Sensor Data Ever 3 Seconds
+    </script>
+
+  <span id="lmoist">--</span>
+  <span id="rmoist">--</span>
+  <span id="temp">--</span>
+  <span id="eco2">--</span>
+  <span id="temp">--</span>
+
 </body>
 </html>
