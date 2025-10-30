@@ -15,4 +15,4 @@ This will install the following dependencies:
 - Adafruit Blinka Translation Layer for CircuitPython
 - CCS811 & BME280 CircuitPython Drivers for Enviornmental Combo
 - ADC Driver for Moisture Sensors
-- Flask Framework for Pytho to HTML Communication
+- Flask Framework for Python to HTML Communication
