@@ -26,10 +26,6 @@ home_dir = os.environ['HOME']
 cam = Camera()
 cam.annotate(f"{current_time} - Internal Temperature: {bme280.temperature:.2f} °C - Relative Humidity: {bme280.relative_humidity:.2f}% - Internal CO2: {ccs811.eco2} ppm")
 
-path = "Desktop/" + current_time + "moisturedata.txt"
-with open(path,'w') as f:
-    f.write('\n'.join("", current_time, ""))
-
 signalstart = digitalio.DigitalInOut(board.GP4)
 
 if signalstart.value == 1:
@@ -45,19 +41,19 @@ while signalstart.value == 1:
         time.sleep(.2)
         moist1 = ADS.readADC(0)
         moist2 = ADS.readADC(1)
-        path = os.path.join(home_dir, "Desktop", f"{current_time}_moisturedata.txt")
+        path = os.path.join(home_dir, "Desktop/TrialData", f"{current_time}_moisturedata.txt")
         with open(path,'w') as f:
             f.write('\n'.join([str(moist1), str(moist2), ""]))
         timer.start()
 
-path = os.path.join(home_dir, "Desktop", f"{current_time}_moisturedata.txt")
+path = os.path.join(home_dir, "Desktop/TrialData", f"{current_time}_moisturedata.txt")
 with open(path,'a') as f:
     f.write("end\n")
 
 ##Moisture/Time Graph
 fig, mg = plt.subplots()
 
-with open(os.path.join(home_dir, "Desktop", f"{current_time}_moisturedata.txt"), "r") as file_object:
+with open(os.path.join(home_dir, "Desktop/TrialData", f"{current_time}_moisturedata.txt"), "r") as file_object:
     computingdata = file_object.readlines()
 
 m1 = []
@@ -81,4 +77,4 @@ mg.plot(s,e, label='Right Moisture Sensor', color='r')
 mg.plot(s,t, label='Left Moisture Sensor', color='b')
 title=f"Moisture Readings Over Time (1.5-3V)\nInternal Temperature: {bme280.temperature:.2f} °C - Relative Humidity: {bme280.relative_humidity:.2f}% - Internal CO2: {ccs811.eco2} ppm")
 mg.grid()
-fig.savefig(os.path.join(home_dir, "Desktop", f"{current_time}_moisturegraph.png"))
+fig.savefig(os.path.join(home_dir, "Desktop/TrialResultGraphs", f"{current_time}_moisturegraph.png"))
