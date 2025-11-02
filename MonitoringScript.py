@@ -1,4 +1,4 @@
-import ADS1x15-ADC
+import ADS1x15
 import adafruit_ccs811
 from adafruit_bme280 import basic as adafruit_bme280
 from picamzero import Camera
