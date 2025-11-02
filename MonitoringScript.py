@@ -2,7 +2,7 @@ import ADS1x15
 import adafruit_ccs811
 from adafruit_bme280 import basic as adafruit_bme280
 from picamzero import Camera
-from flask import Flask
+from flask import Flask, Response
 import digitalio
 import board
 from datetime import datetime
@@ -21,6 +21,7 @@ bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c_bus, address=0X77)
 ADS = ADS1x15.ADS1115(1, 0X48)
 bme280.sea_level_pressure = 1013.25
 cam = Camera()
+cam.still_size = (640, 480)
 
 f = ADS.toVoltage() ##Set parameters for Moisture sensors
 ADS.setComparatorThresholdLow( 1.5 / f )
@@ -67,6 +68,19 @@ def systemhealth():
     return "<p>System Healthy</p>"
   else:
     return "<p>Check System!</p>"
+    
+def generate_frames():
+  while True:
+    frame = cam.capture_array
+    yield (b' --frame\r\n'
+           b'Content-Type: image/jpeg\r\n\r\n' +
+           frame.tobytes() + b'\r\n')
+    time.sleep(0.05)
+
+@app.route('/videofeed')
+def video_feed():
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def monitor_loop():
   global moistl, moistr, acctemp, leftlowwater, lefthighwater, rightlowwater, righthighwater, lowtemp, hightemp, errorreset, systemhealthy, photo_time
