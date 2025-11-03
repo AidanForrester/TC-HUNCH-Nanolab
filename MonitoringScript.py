@@ -1,4 +1,4 @@
-import ADS1x15
+from adafruit_ads1x15 import ADS1015, AnalogIn, ads1x15
 import adafruit_ccs811
 from adafruit_bme280 import basic as adafruit_bme280
 from picamzero import Camera
@@ -18,15 +18,12 @@ photo_time = datetime.now()
 i2c_bus = board.I2C() ## Initialization of sensors
 ccs811 = adafruit_ccs811.CCS811(i2c_bus, address=0x5B)
 bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c_bus, address=0X77)
-ADS = ADS1x15.ADS1115(1, 0X48)
+ads = ADS1015(i2c_bus)
 bme280.sea_level_pressure = 1013.25
 cam = Camera()
 
-f = ADS.toVoltage() ##Set parameters for Moisture sensors
-ADS.setComparatorThresholdLow( 1.5 / f )
-ADS.setComparatorThresholdHigh( 3 / f )
-moistr = ADS.readADC(0)
-moistl = ADS.readADC(1)
+moistr = AnalogIn(ads, ads1x15.Pin.A0)
+moistl = AnalogIn(ads, ads1x15.Pin.A1)
 
 expectedtemp = 71 ##Changeable settings for Temp to monitor for
 acctemp = bme280.temperature
@@ -51,11 +48,11 @@ def temp():
 
 @app.route("/lmoist")
 def lmoist():
-  return f"<p>{moistl:.2f} V (1.5-3)</p>"
+  return f"<p>{moistl.voltage:.2f} V (1.5-3)</p>"
 
 @app.route("/rmoist")
 def rmoist():
-  return f"<p>{moistr:.2f} V (1.5-3)</p>"
+  return f"<p>{moistr.voltage:.2f} V (1.5-3)</p>"
 
 @app.route("/eco2")
 def co2():
@@ -77,8 +74,8 @@ def monitor_loop():
 
     while not signalstart.value: ##While a trial is not happening
       current_time = datetime.now() ##Read sensors and time
-      moistr = ADS.readADC(0)
-      moistl = ADS.readADC(1)
+      readmoistl = moistl.voltage
+      readmoistr = moistr.voltage
       acctemp = bme280.temperature
       current_time = datetime.now()
       errorcheck = leftlowwater + lefthighwater + rightlowwater + righthighwater + lowtemp + hightemp ##Checks if the system has any errors
