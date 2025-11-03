@@ -4,7 +4,7 @@ import digitalio
 from datetime import datetime
 import os
 
-import ADS1x15
+from adafruit_ads1x15 import ADS1015, AnalogIn, ads1x15
 import adafruit_ccs811
 from adafruit_bme280 import basic as adafruit_bme280
 from picamzero import Camera
@@ -15,11 +15,10 @@ import numpy as np
 i2c_bus = board.I2C()
 ccs811 = adafruit_ccs811.CCS811(i2c_bus, address=0x5B)
 bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c_bus, address=0X77)
-ADS = ADS1x15.ADS1115(1, 0X48)
+ads = ADS1015(i2c_bus)
 
-f = ADS.toVoltage()
-ADS.setComparatorThresholdLow( 1.5 / f )
-ADS.setComparatorThresholdHigh( 3 / f )
+moistr = AnalogIn(ads, ads1x15.Pin.A0)
+moistl = AnalogIn(ads, ads1x15.Pin.A1)
 
 current_time = datetime.now()
 home_dir = os.environ['HOME'] 
@@ -39,8 +38,8 @@ if signalstart.value == 1:
 while signalstart.value == 1:
     for i in range(26):
         time.sleep(.2)
-        moist1 = ADS.readADC(0)
-        moist2 = ADS.readADC(1)
+        readmoistl = moistl.voltage
+        readmoistr = moistr.voltage
         path = os.path.join(home_dir, "Desktop/TrialData", f"{current_time}_moisturedata.txt")
         with open(path,'w') as f:
             f.write('\n'.join([str(moist1), str(moist2), ""]))
