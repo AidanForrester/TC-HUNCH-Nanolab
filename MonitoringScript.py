@@ -2,7 +2,7 @@ from adafruit_ads1x15 import ADS1015, AnalogIn, ads1x15
 import adafruit_ccs811
 from adafruit_bme280 import basic as adafruit_bme280
 from picamzero import Camera
-from flask import Flask
+from flask import Flask, Responses
 import digitalio
 import board
 from datetime import datetime
@@ -65,6 +65,19 @@ def systemhealth():
   else:
     return "<p>Check System!</p>"
 
+def generate_frames():
+  while True:
+    frame = cam.capture_array
+    yield (b' --frame\r\n'
+           b'Content-Type: image/jpeg\r\n\r\n' +
+           frame.tobytes() + b'\r\n')
+    time.sleep(0.05)
+
+@app.route('/videofeed')
+def video_feed():
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+  
 def monitor_loop():
   global moistl, moistr, acctemp, leftlowwater, lefthighwater, rightlowwater, righthighwater, lowtemp, hightemp, errorreset, systemhealthy, photo_time
   while True:
