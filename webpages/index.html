@@ -112,27 +112,31 @@
       const sidebar = document.querySelector('.sidebar')
       sidebar.style.display = 'none'
     }
-    async function updateData() { //Data collection and Updating
+  <script>
+  async function updateData() {
       try {
-        //Connect to sensor functions in MonitoringScript.py
-        document.getElementById("temp").innerHTML = await (await fetch("/temp")).text();
-        document.getElementById("humidity").innerHTML = await (await fetch("/temp")).text();
+          const response = await fetch('/sensor_data'); // endpoint that returns JSON
+          const data = await response.json();
+          document.getElementById('humidity').innerText = data.humidity;
+          document.getElementById('temp').innerText = data.temperature;
+      } catch (err) {
+          console.error('Failed to fetch sensor data:', err);
       }
-      catch (err) {
-        console.error("Error Updating Sensor Data, Please Check System | Error:", err);
-      }
-    }
+  }
+
+// Update every 2 seconds
+setInterval(updateData, 2000);
+updateData(); // initial call
+</script>
 
     updateData(); //Initial Sensor Pull
     setInterval(updateData, 3000); //Update Sensor Data Ever 3 Seconds
     </script>
 
-  <span id="lmoist">--</span>
-  <span id="rmoist">--</span>
-  <span id="temp">--</span>
-  <span id="eco2">--</span>
+  <span id="humidity">--</span>
   <span id="temp">--</span>
 
 </body>
 </html>
+
 
