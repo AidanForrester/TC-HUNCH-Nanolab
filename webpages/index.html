@@ -34,8 +34,8 @@
         <a href="#">
           <!-- SVG X icon -->
           <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 96 960 960">
-            <path d="m249 849-42-42 231-231-231-231 42-42 
-                     231 231 231-231 42 42-231 231 
+            <path d="m249 849-42-42 231-231-231-231 42-42
+                     231 231 231-231 42 42-231 231
                      231 231-42 42-231-231-231 231Z"/>
           </svg>
         </a>
@@ -93,6 +93,10 @@
     </ul>
   </nav>
 
+<p>Humidity: <span id="humidity">--</span> %</p>
+<p>Temperature: <span id="temp">--</span> °C</p>
+<p>CO2: <span id="co2">--</span> ppm</p>
+
   <!-- ===========================
        JAVASCRIPT FUNCTIONALITY
        =========================== -->
@@ -112,32 +116,21 @@
       const sidebar = document.querySelector('.sidebar')
       sidebar.style.display = 'none'
     }
-  <script>
-  async function updateData() {
-      try {
-          const response = await fetch('/sensor_data'); // endpoint that returns JSON
-          const data = await response.json();
-          document.getElementById('humidity').innerText = data.humidity;
-          document.getElementById('temp').innerText = data.temperature;
-      } catch (err) {
-          console.error('Failed to fetch sensor data:', err);
-      }
-  }
-
-  // Update every 2 seconds
-  setInterval(updateData, 2000);
-  updateData(); // initial call
-  </script>
-
-    updateData(); //Initial Sensor Pull
-    setInterval(updateData, 3000); //Update Sensor Data Ever 3 Seconds
-    </script>
-
-  <span id="humidity">--</span>
-  <span id="temp">--</span>
+</script>
+<script>
+async function updateData() {
+    try {
+        const response = await fetch('/sensor_data');
+        const data = await response.json();
+        document.getElementById('humidity').innerText = data.humidity;
+        document.getElementById('temp').innerText = data.temperature;
+    } catch (err) {
+        console.error('Failed to fetch sensor data:', err);
+    }
+}
+updateData();
+setInterval(updateData, 3);
+</script>
 
 </body>
 </html>
-
-
-
