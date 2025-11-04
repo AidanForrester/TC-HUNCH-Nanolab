@@ -116,10 +116,7 @@
       try {
         //Connect to sensor functions in MonitoringScript.py
         document.getElementById("temp").innerHTML = await (await fetch("/temp")).text();
-        document.getElementById("lmoist").innerHTML = await (await fetch("/lmoist")).text();
-        document.getElementById("rmoist").innerHTML = await (await fetch("/rmoist")).text();
-        document.getElementById("eco2").innerHTML = await (await fetch("/eco2")).text();
-        document.getElementById("health").innerHTML = await (await fetch("/health")).text();
+        document.getElementById("humidity").innerHTML = await (await fetch("/temp")).text();
       }
       catch (err) {
         console.error("Error Updating Sensor Data, Please Check System | Error:", err);
@@ -138,3 +135,4 @@
 
 </body>
 </html>
+
