@@ -16,3 +16,8 @@ This will install the following dependencies:
 - CCS811 & BME280 CircuitPython Drivers for Enviornmental Combo
 - Adafruit ADC Driver for Moisture Sensors
 - Flask Framework for Python to HTML Communication
+
+## Usage Instructions
+To make the program work, you must work in a python virtual enviornment by entering these lines:
+``python3 -m venv --system-site-packages myenv
+source myenv/bin/activate``
