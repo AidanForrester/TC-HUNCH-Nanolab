@@ -7,6 +7,8 @@ Main Tabs
 - System Status
 - Settings
 - About
+- Contact
+- Updates Explanation
 
 Dashboard
 - Project name
@@ -14,33 +16,40 @@ Dashboard
 - Buttons to Access main things/do main functions
 - Mini preview charts (temperature, humidity, moisture)
 - Current day/time elapsed
+- More Info About Project
 Live Data
 - Real Time values
 - Real time graphs
 - Status Of sensors
+- Tab for the weeks
 Controls
 - Switches for some Hardware 
 - lights
 - Water movement
 - Picture scheduler editor
+- Sensor Controls for ones that need it
 Camera
 - Live Camera
 - Camera Controls for pictures, or videos
 - Download latest image?
+- time stamps
 Analytics
 - graphs
 - comparing data tools
 - Export graphs
 - Notes for substrates
+- Comparing from earlier in the week including math??
 System Status
 - uptime
 - CPU temp/usage
 - Storage/Memory info
-- Maybe Pi Pannel????
+- Maybe Pi Pannel info/how to access
 - Reboot button??
+- date with last update
 Settings
 - General System Settings?
 - Mainly a "concept" if we were to actually make it more secure to access by web
+- Including some things like where to export files too
 About
 - Team name, school, mentor
 - Hunch program info
@@ -48,6 +57,10 @@ About
 - Maybe Roles Overview with contact or branding for functions
 - Team pictures
 - Name and Version of build
+- Credit for those who helped
+- Instructor
+Update Explanation
+- Version Build + Notes on what was added
 
 
 Notes
@@ -55,5 +68,6 @@ Notes
 - Plotly and Chart.js for graphing tools
 - Database list 
     - 
+
 
 Maybe message alerts would be funny to try
