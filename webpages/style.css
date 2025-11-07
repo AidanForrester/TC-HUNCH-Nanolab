@@ -136,7 +136,7 @@ main {
       box-shadow: 0 4px 8px rgba(0,0,0,0);
     }
 
-h1, h2, h3 {
+h1, h2, h3, data {
       margin: 10px 0;
       text-align: center;     /* centers all headers */
     }
