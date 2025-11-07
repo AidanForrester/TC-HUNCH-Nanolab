@@ -1,5 +1,5 @@
-import adafruit_ccs811
-from adafruit_bme280 import basic as adafruit_bme280
+import adafruit_bme680
+from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
 import digitalio
 import board
 import os
@@ -13,20 +13,21 @@ app = Flask(__name__)
 
 time.sleep(1)
 i2c_bus = board.I2C() ## Initialization of sensors
-bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c_bus)
-bme280.sea_level_pressure = 1013.25
-try:
-        ccs811 = adafruit_ccs811.CCS811(i2c_bus, address = 0x5B)
-except (ValueError, RuntimeError, OSError) as e:
-    print("CCS811 not ready:", e)
-    ccs811 = None
+bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c_bus)
+bme680.seaLevelhPa = 1013.25
+
+ads = ADS1115(i2c_bus)
+m1 = AnalogIn(ads, ads1x15.Pin.A0)
+m2 = AnalogIn(ads, ads1x15.Pin.A1)
 
 @app.route('/sensor_data')
 def sensor_data():
-    humidity = round(bme280.humidity, 1)
-    temperature = round(bme280.temperature, 1)
-    co2 = round(ccs811.eco2, 0) if ccs811 and getattr(ccs811, "data_ready", False) else None
-    return jsonify({'humidity': humidity, 'temperature': temperature, 'co2': co2})
+    humidity = round(bme680.humidity, 1)
+    temperature = round(bme680.temperature, 1)
+    voc = round(bme680.gas, 1)
+    moist1 = round(m1.voltage, 3)
+    moist2 = round(m2.voltage, 3)
+    return jsonify({'humidity': humidity, 'temperature': temperature, 'gas': gas, 'moist1': moist1, 'moist2'})
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
@@ -34,17 +35,5 @@ def serve_page(path):
 
     return send_from_directory(WEB_DIR, path)
 
-def main_loop():
-        while True:
-                try:
-                        print("CO2: %1.0f PPM" % ccs811.eco2)
-                except:
-                        print("CCS811 not ready")
-                print("\nTemperature: %0.1f C" % bme280.temperature)
-                print("Humidity: %0.1f %%" % bme280.humidity)
-                time.sleep(3)
-
 if __name__ == "__main__":
-        t = threading.Thread(target=main_loop, daemon=True)
-        t.start()
         app.run(host="0.0.0.0", port=5000)
