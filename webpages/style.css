@@ -56,7 +56,7 @@ nav a {
 
 /* Hover effect for links */
 nav a:hover {
-  background-color: #f0f0f0;                         /* Light gray background on hover */
+  background-color: #d6d6d6;                         /* Light gray background on hover */
 }
 
 /* The very first <li> (usually logo/title) */
@@ -75,10 +75,10 @@ nav li:first-child {
   width: 250px;                                      /* Sidebar width */
   
   /* Glass-like style */
-  background-color: rgba(255, 255, 255, 0.596);      /* Semi-transparent white background */
+  background-color: rgba(255, 255, 255, 0.849);      /* Semi-transparent white background */
   backdrop-filter: blur(12px);                       /* Blurred glass effect */
   
-  box-shadow: -10px 0 10px rgba(0, 0, 0, 0.1);       /* Shadow to separate from page */
+  box-shadow: -10px 0 10px rgba(0, 0, 0, 0.432);       /* Shadow to separate from page */
   
   list-style: none;                                  /* No bullets */
   display: none;                                     /* Hidden by default (shown via JS) */
@@ -124,3 +124,29 @@ nav li:first-child {
     width: 100%;                                     /* Sidebar takes full screen width */
   }
 }
+
+
+
+main {
+      max-width: 800px;       /*  centered on diff sizes */
+      margin: 40px auto;      /* centers the block horizontally with top/bottom space */
+      background-color: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0);
+    }
+
+h1, h2, h3 {
+      margin: 10px 0;
+      text-align: center;     /* centers all headers */
+    }
+
+.teamphoto { /* TeamPhoto Format Settings*/
+        display: block;
+        width: 100%;       /* size   */
+        height: auto;     
+        margin: 20px auto; /* centers  */
+        border-radius: 10px; /*  rounded corners */
+
+        border: 4px solid #ffffff38
+    }
