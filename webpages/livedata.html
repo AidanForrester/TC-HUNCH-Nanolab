@@ -114,5 +114,92 @@
       sidebar.style.display = 'none'
     }
   </script>
+
+  <main>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Moisture Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    #chart-container {
+      width: 80%;
+      margin: auto;
+    }
+    #moist2 {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Live Moisture Data: <span id="moist2">--</span></h2>
+  <div id="chart-container">
+    <canvas id="moistureChart"></canvas>
+  </div>
+  <button onclick="exportChart()">Export Chart as Image</button>
+
+  <script>
+    const ctx = document.getElementById('moistureChart').getContext('2d');
+    const moistureChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Moisture Level',
+          data: [],
+          borderColor: 'blue',
+          backgroundColor: 'rgba(0, 0, 255, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'Time' }},
+          y: { title: { display: true, text: 'Moisture' }}
+        }
+      }
+    });
+
+    function updateChart() {
+      const moistValue = document.getElementById('moist2').textContent;
+      const value = parseFloat(moistValue);
+      if (!isNaN(value)) {
+        const now = new Date().toLocaleTimeString();
+        moistureChart.data.labels.push(now);
+        moistureChart.data.datasets[0].data.push(value);
+        if (moistureChart.data.labels.length > 20) {
+          moistureChart.data.labels.shift();
+          moistureChart.data.datasets[0].data.shift();
+        }
+        moistureChart.update();
+      }
+    }
+
+    function exportChart() {
+      const link = document.createElement('a');
+      link.href = moistureChart.toBase64Image();
+      link.download = 'moisture_chart.png';
+      link.click();
+    }
+
+    // Simulate live updates every 2 seconds
+    setInterval(() => {
+      // Simulate changing the span value (replace with real sensor update logic)
+      document.getElementById('moist2').textContent = (Math.random() * 20).toFixed(2);
+      updateChart();
+    }, 3000);
+  </script>
+</body>
+</html>
+
+  </main>
+
+
+
+
+
 </body>
 </html>
