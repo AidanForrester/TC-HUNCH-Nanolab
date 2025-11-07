@@ -94,15 +94,10 @@
     </ul>
   </nav>
 
-<p>Humidity: <span id="humidity">--</span> %</p>
-<p>Temperature: <span id="temp">--</span> °C</p>
-<p>CO2: <span id="co2">--</span> ppm</p>
 
-<iframe src="http://10.30.83.51:5000/video-feed"
-        width="640" height="480"
-        frameborder="0"
-        allow="autoplay">
-</iframe>
+
+
+
 
   <!-- ===========================
        JAVASCRIPT FUNCTIONALITY
@@ -138,6 +133,14 @@ async function updateData() {
 updateData();
 setInterval(updateData, 3);
 </script>
-
+<main>
+    <h1>Dashboard</h1>
+    <h2>Main Sensor Values</h2>
+    <h3>Humidity: <span id="humidity">--</span>  % </h3>
+    <h3>CO2: <span id="co2">--</span> ppm</h3>
+    <h3>Temperature: <span id="temp">--</span> °C</h3>
+</main>
 </body>
 </html>
+
+

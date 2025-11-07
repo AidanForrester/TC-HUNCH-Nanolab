@@ -128,9 +128,9 @@ nav li:first-child {
 
 
 main {
-      max-width: 800px;       /*  centered on diff sizes */
+      max-width: 1000px;       /*  centered on diff sizes */
       margin: 40px auto;      /* centers the block horizontally with top/bottom space */
-      background-color: white;
+      background-color: rgba(255, 255, 255, 0.85);
       padding: 30px 40px;
       border-radius: 12px;
       box-shadow: 0 4px 8px rgba(0,0,0,0);
@@ -147,6 +147,5 @@ h1, h2, h3 {
         height: auto;     
         margin: 20px auto; /* centers  */
         border-radius: 10px; /*  rounded corners */
-
-        border: 4px solid #ffffff38
+        border: 4px solid #b9b9b9e0
     }
