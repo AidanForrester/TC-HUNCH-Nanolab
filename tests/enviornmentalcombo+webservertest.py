@@ -19,6 +19,7 @@ bme680.seaLevelhPa = 1013.25
 ads = ADS1115(i2c_bus)
 m1 = AnalogIn(ads, ads1x15.Pin.A0)
 m2 = AnalogIn(ads, ads1x15.Pin.A1)
+tds = AnalogIn(ads, ads1x15.Pin.A2)
 
 maxm1 = 2.0 ##TEST AND CHANGE THESE
 maxm2 = 1.5 ##TEST AND CHANGE THESE
@@ -32,6 +33,7 @@ def sensor_data():
     voc = round(bme680.gas, 1)
     moist1 = round(((m1.voltage - minm1) / maxm1) * 100), 1)
     moist1 = round(((m2.voltage - minm2) / maxm2) * 100), 1)
+    tds = round(tds.value, 1)
     return jsonify({'humidity': humidity, 'temperature': temperature, 'gas': gas, 'moist1': moist1, 'moist2'})
 
 @app.route('/', defaults={'path': 'index.html'})
