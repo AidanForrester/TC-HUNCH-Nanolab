@@ -20,13 +20,16 @@ ads = ADS1115(i2c_bus)
 m1 = AnalogIn(ads, ads1x15.Pin.A0)
 m2 = AnalogIn(ads, ads1x15.Pin.A1)
 
+basem1 = .75 ##TEST AND CHANGE THESE
+basem2 = .30 ##TEST AND CHANGE THESE
+
 @app.route('/sensor_data')
 def sensor_data():
     humidity = round(bme680.humidity, 1)
     temperature = round(bme680.temperature, 1)
     voc = round(bme680.gas, 1)
-    moist1 = round(m1.voltage, 3)
-    moist2 = round(m2.voltage, 3)
+    moist1 = round((m1.voltage / basem1), 3)
+    moist2 = round((m2.voltage / basem2), 3)
     return jsonify({'humidity': humidity, 'temperature': temperature, 'gas': gas, 'moist1': moist1, 'moist2'})
 
 @app.route('/', defaults={'path': 'index.html'})
