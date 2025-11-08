@@ -138,7 +138,7 @@ setInterval(updateData, 3);
 </script>
 <main>
     <h1>Dashboard</h1> <!--Main Header-->
-    <h2>Main Sensor Values</h2> <!-- Sub Header -->
+    <h2>Current Sensor Values</h2> <!-- Sub Header -->
   
     <h3>_</h3>
     <data style="color: white;">Humidity: <span id="humidity">--</span>%</data>     <!--Fetches humidity Variable-->
@@ -147,9 +147,13 @@ setInterval(updateData, 3);
     <data style="color:white">Lower Moisture Sensor: <span id="moist1">--</span>%</data>    <!--Fetches moist 1/lower Variable-->
     <data style="color:rgb(255, 255, 255)">Upper Moisture Sensor: <span id="moist2">--</span>%</data>   <!--Fetches moist 2/upper Variable-->
 
+    <h2>Camera Preview</h2> <!-- Sub Header -->
+    
+    <img src="{{ url_for('video_feed') }}" width="640" height="480">
 </main>
 
 </body>
 </html>
+
 
 
