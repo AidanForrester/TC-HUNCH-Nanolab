@@ -27,6 +27,20 @@ maxm2 = 1.5 ##TEST AND CHANGE THESE
 minm1 = .75 ##TEST AND CHANGE THESE
 minm2 = .30 ##TEST AND CHANGE THESE
 
+##Create function to get the jpeg images to display
+def generate_frames():
+    while True:
+        frame = cam.read() 
+        ret, buffer = cv2.imencode('.jpg', frame)
+        yeild (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+              time.sleep(0.05)
+
+@app.route('/videofeed') ##Specify address for feed to refer back to
+def videofeed():
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
 @app.route('/sensor_data')
 def sensor_data():
     humidity = round(bme680.humidity, 1)
@@ -41,8 +55,10 @@ def sensor_data():
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
 def serve_page(path):
-
     return send_from_directory(WEB_DIR, path)
 
 if __name__ == "__main__":
+        sensor_thread = threading.Thread(target=sensor_data)
+        sensor_thread.daemon = True
+        sensor_thread.start()
         app.run(host="0.0.0.0", port=5000)
