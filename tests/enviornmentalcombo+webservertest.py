@@ -7,34 +7,35 @@ import time
 from flask import Flask, Response, jsonify, send_from_directory
 import threading
 import subprocess
-WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "TC-HUNCH-Nanolab/webpages")
+WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages")
+WEB_DIR = os.path.abspath(WEB_DIR)
 
 app = Flask(__name__)
 
 time.sleep(1)
 i2c_bus = board.I2C() ## Initialization of sensors
-bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c_bus)
+bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c_bus, address=0x77)
 bme680.seaLevelhPa = 1013.25
 
-ads = ADS1115(i2c_bus)
+ads = ADS1115(i2c_bus, address=0x48)
 m1 = AnalogIn(ads, ads1x15.Pin.A0)
 m2 = AnalogIn(ads, ads1x15.Pin.A1)
 tds = AnalogIn(ads, ads1x15.Pin.A2)
 ph = AnalogIn(ads, ads1x15.Pin.A3)
 
-maxm1 = 2.0 ##TEST AND CHANGE THESE
-maxm2 = 1.5 ##TEST AND CHANGE THESE
-minm1 = .75 ##TEST AND CHANGE THESE
-minm2 = .30 ##TEST AND CHANGE THESE
+minm1 = 3.802 ##TEST AND CHANGE THESE
+minm2 = 3.66025 ##TEST AND CHANGE THESE
+maxm1 = 3.13625 ##TEST AND CHANGE THESE
+maxm2 = 3.05775 ##TEST AND CHANGE THESE
 
 ##Create function to get the jpeg images to display
 def generate_frames():
     while True:
-        frame = cam.read() 
+        frame = cam.read()
         ret, buffer = cv2.imencode('.jpg', frame)
-        yeild (b'--frame\r\n'
+        yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-              time.sleep(0.05)
+        time.sleep(.5)
 
 @app.route('/videofeed') ##Specify address for feed to refer back to
 def videofeed():
@@ -46,11 +47,11 @@ def sensor_data():
     humidity = round(bme680.humidity, 1)
     temperature = round(bme680.temperature, 1)
     voc = round(bme680.gas, 1)
-    moist1 = round(((m1.voltage - minm1) / maxm1) * 100), 1)
-    moist1 = round(((m2.voltage - minm2) / maxm2) * 100), 1)
+    moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 1)
+    moist2 = round(((m2.voltage - maxm2) / (minm2 - maxm2)) * 100, 1)
     TDS = round(tds.value, 1)
     pH = round(ph.value, 1)
-    return jsonify({'humidity': humidity, 'temperature': temperature, 'voc': voc, 'moist1': moist1, 'moist2': moist2, 'TDS': TDS, 'pH': pH})
+    return jsonify({'humidity': humidity, 'temperature': temperature, 'voc': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TD>
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
@@ -58,7 +59,12 @@ def serve_page(path):
     return send_from_directory(WEB_DIR, path)
 
 if __name__ == "__main__":
-        sensor_thread = threading.Thread(target=sensor_data)
+        def background_sensor_task():
+           with app.app_context():
+            while True:
+                sensor_data()
+                time.sleep(2)  # optional polling delay
+        sensor_thread = threading.Thread(target=background_sensor_task)
         sensor_thread.daemon = True
         sensor_thread.start()
         app.run(host="0.0.0.0", port=5000)
