@@ -93,17 +93,12 @@
       </li>
     </ul>
   </nav>
-
-
-
-
-
-
-  <!-- ===========================
+  
+ <!-- ===========================
        JAVASCRIPT FUNCTIONALITY
        =========================== -->
   <script>
-    
+
     // When user clicks the hamburger icon:
     // - Select the sidebar element.
     // - Change its display property from "none" to "flex".
@@ -127,6 +122,12 @@ async function updateData() {
         const data = await response.json();
         document.getElementById('humidity').innerText = data.humidity;
         document.getElementById('temp').innerText = data.temperature;
+        document.getElementById('moist1').innerText = data.moist1;
+        document.getElementById('moist2').innerText = data.moist2;
+        document.getElementById('tds').innerText = data.tds;
+        document.getElementById('pH').innerText = data.pH;
+        document.getElementById('voc').innerText = data.voc;
+
     } catch (err) {
         console.error('Failed to fetch sensor data:', err);
     }
@@ -139,13 +140,14 @@ setInterval(updateData, 3);
 <main>
     <h1>Dashboard</h1> <!--Main Header-->
     <h2>Current Sensor Values</h2> <!-- Sub Header -->
-  
+
     <h3>&#8203;</h3> <!-- Transparent Line Break -->
     <data style="color: white;">Humidity: <span id="humidity">--</span>%</data>     <!--Fetches humidity Variable-->
-    <data style="color: white;">CO2: <span id="co2">--</span> ppm</data>    <!--Fetches co2 Variable-->
+    <data style="color: white;">VOC: <span id="voc">--</span> ppm</data>    <!--Fetches co2 Variable-->
     <data style="color:white">Temperature: <span id="temp">--</span>°C</data>   <!--Fetches temp Variable-->
-    <data style="color:white">Lower Moisture Sensor: <span id="moist1">--</span>%</data>    <!--Fetches moist 1/lower Variable-->
-    <data style="color:rgb(255, 255, 255)">Upper Moisture Sensor: <span id="moist2">--</span>%</data>   <!--Fetches moist 2/upper Variable-->
+    <data style="color:white">Lower Moisture Sensor: <span id="moist1">--</span>%</data>    <!--Fetches moist 1/lower Variable->
+    <data style="color:rgb(255, 255, 255)">Upper Moisture Sensor: <span id="moist2">--</span>%</data>   <!--Fetches moist 2/upp>
+    <data style="color:white">Total Dissolved Solids: <span id="tds">--</span>ppm</data>
 
     <h2>Camera Preview</h2> <!-- Sub Header -->
     <h3>&#8203;</h3> <!-- Transparent Line Break -->
@@ -153,9 +155,3 @@ setInterval(updateData, 3);
 </main>
 </body>
 </html>
-
-
-
-
-
-
