@@ -33,7 +33,7 @@ def sensor_data():
     humidity = round(bme680.humidity, 1)
     temperature = round(bme680.temperature, 1)
     try:
-     voc = round(bme680.gas, 1)
+     voc = round(bme680.gas, 1) / 1000
      lastvoc = voc
     except Exception as e:
      voc = lastvoc
