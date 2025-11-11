@@ -23,10 +23,10 @@ m2 = AnalogIn(ads, ads1x15.Pin.A1)
 tds = AnalogIn(ads, ads1x15.Pin.A2)
 ph = AnalogIn(ads, ads1x15.Pin.A3)
 
-minm1 = 3.802 ##TEST AND CHANGE THESE
-minm2 = 3.66025 ##TEST AND CHANGE THESE
-maxm1 = 3.13625 ##TEST AND CHANGE THESE
-maxm2 = 3.05775 ##TEST AND CHANGE THESE
+maxm1 = 3.802 ##TEST AND CHANGE THESE
+maxm2 = 3.66025 ##TEST AND CHANGE THESE
+minm1 = 3.13625 ##TEST AND CHANGE THESE
+minm2 = 3.05775 ##TEST AND CHANGE THESE
 
 @app.route('/sensor_data')
 def sensor_data():
@@ -37,8 +37,16 @@ def sensor_data():
      lastvoc = voc
     except Exception as e:
      voc = lastvoc
-    moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 1)
-    moist2 = round(((m2.voltage - maxm2) / (minm2 - maxm2)) * 100, 1)
+    moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
+    if moist1 >= 100:
+        moist1 = 100
+    if moist1 <= 0:
+        moist1 = 0
+    moist2 = round(((m2.voltage - maxm2) / (minm2 - maxm2)) * 100, 0)
+    if moist2 >= 100:
+        moist2 = 100
+    if moist2 <= 0:
+        moist2 = 0
     TDS = round(tds.value, 1)
     return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TD>
 
