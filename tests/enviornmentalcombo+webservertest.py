@@ -23,10 +23,10 @@ m2 = AnalogIn(ads, ads1x15.Pin.A1)
 tds = AnalogIn(ads, ads1x15.Pin.A2)
 ph = AnalogIn(ads, ads1x15.Pin.A3)
 
-maxm1 = 3.802 ##TEST AND CHANGE THESE
-maxm2 = 3.66025 ##TEST AND CHANGE THESE
-minm1 = 3.13625 ##TEST AND CHANGE THESE
-minm2 = 3.05775 ##TEST AND CHANGE THESE
+maxm1 = 1.2558 ##TEST AND CHANGE THESE
+maxm2 = 1.7690 ##TEST AND CHANGE THESE
+minm1 = 0.16073 ##TEST AND CHANGE THESE
+minm2 = 0.62334 ##TEST AND CHANGE THESE
 
 @app.route('/sensor_data')
 def sensor_data():
@@ -48,7 +48,7 @@ def sensor_data():
     if moist2 <= 0:
         moist2 = 0
     TDS = round(tds.value, 1)
-    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TDS})
+    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TD>
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
