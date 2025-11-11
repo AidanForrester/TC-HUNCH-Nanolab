@@ -93,7 +93,27 @@
       </li>
     </ul>
   </nav>
-  
+
+  <main>
+    <h1>Dashboard</h1> <!--Main Header-->
+    <h2>Current Sensor Values</h2> <!-- Sub Header -->
+
+    <h3>&#8203;</h3> <!-- Transparent Line Break -->
+    <data style="color: white;">Humidity: <span id="humidity">--</span>%</data>     <!--Fetches humidity-->
+    <data style="color:white">Temperature: <span id="temp">--</span>°C</data>   <!--Fetches temp Variable-->
+    <data style="color:white">Total Dissolved Solids: <span id="tds">--</span> ppm</data>
+    <data style="color: white;">VOC: <span id="VOC">--</span> ppm</data>
+
+    <h3>&#8203;</h3>
+
+    <data style="color:rgb(255, 255, 255)">Upper Moisture Sensor: <span id="moist2">--</span>%</data>
+    <data style="color:white">Lower Moisture Sensor: <span id="moist1">--</span>%</data>
+    <h3>&#8203;</h3>
+
+    <h2>Camera Preview</h2> <!-- Sub Header -->
+    <img src="{{ url_for('video_feed') }}" width="640" height="480" class="teamphoto"> <!-- Fetch Video-->
+</main>
+
  <!-- ===========================
        JAVASCRIPT FUNCTIONALITY
        =========================== -->
@@ -125,33 +145,16 @@ async function updateData() {
         document.getElementById('moist1').innerText = data.moist1;
         document.getElementById('moist2').innerText = data.moist2;
         document.getElementById('tds').innerText = data.tds;
-        document.getElementById('pH').innerText = data.pH;
-        document.getElementById('voc').innerText = data.voc;
+        document.getElementById('VOC').innerText = data.VOC;
 
     } catch (err) {
         console.error('Failed to fetch sensor data:', err);
     }
 }
 updateData();
-setInterval(updateData, 3);
+setInterval(updateData, 1000);
 
 
 </script>
-<main>
-    <h1>Dashboard</h1> <!--Main Header-->
-    <h2>Current Sensor Values</h2> <!-- Sub Header -->
-
-    <h3>&#8203;</h3> <!-- Transparent Line Break -->
-    <data style="color: white;">Humidity: <span id="humidity">--</span>%</data>     <!--Fetches humidity Variable-->
-    <data style="color: white;">VOC: <span id="voc">--</span> ppm</data>    <!--Fetches co2 Variable-->
-    <data style="color:white">Temperature: <span id="temp">--</span>°C</data>   <!--Fetches temp Variable-->
-    <data style="color:white">Lower Moisture Sensor: <span id="moist1">--</span>%</data>    <!--Fetches moist 1/lower Variable->
-    <data style="color:rgb(255, 255, 255)">Upper Moisture Sensor: <span id="moist2">--</span>%</data>   <!--Fetches moist 2/upp>
-    <data style="color:white">Total Dissolved Solids: <span id="tds">--</span>ppm</data>
-
-    <h2>Camera Preview</h2> <!-- Sub Header -->
-    <h3>&#8203;</h3> <!-- Transparent Line Break -->
-    <img src="{{ url_for('video_feed') }}" width="640" height="480" class="teamphoto"> <!-- Fetch Video Stream -->
-</main>
 </body>
 </html>
