@@ -28,20 +28,6 @@ minm2 = 3.66025 ##TEST AND CHANGE THESE
 maxm1 = 3.13625 ##TEST AND CHANGE THESE
 maxm2 = 3.05775 ##TEST AND CHANGE THESE
 
-##Create function to get the jpeg images to display
-def generate_frames():
-    while True:
-        frame = cam.read()
-        ret, buffer = cv2.imencode('.jpg', frame)
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-        time.sleep(.5)
-
-@app.route('/videofeed') ##Specify address for feed to refer back to
-def videofeed():
-    return Response(generate_frames(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
 @app.route('/sensor_data')
 def sensor_data():
     humidity = round(bme680.humidity, 1)
