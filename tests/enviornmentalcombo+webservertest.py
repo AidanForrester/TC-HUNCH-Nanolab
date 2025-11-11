@@ -48,7 +48,7 @@ def sensor_data():
     if moist2 <= 0:
         moist2 = 0
     TDS = round(tds.value, 1)
-    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TD>
+    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TDS})
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
