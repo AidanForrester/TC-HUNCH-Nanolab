@@ -1,8 +1,11 @@
 import adafruit_bme680
 from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
+import cv2
+
 import digitalio
 import board
 import os
+
 import time
 from flask import Flask, Response, jsonify, send_from_directory
 import threading
@@ -48,7 +51,28 @@ def sensor_data():
     if moist2 <= 0:
         moist2 = 0
     TDS = round(tds.value, 1)
-    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TD>
+    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TDS})
+
+video = cv2.VideoCapture(0)
+new_width = 640
+new_height = 480
+
+def video_stream():
+    while(True):
+        ret, frame = video.read()
+        if not ret:
+            break
+        else:
+            resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+            ret, buffer = cv2.imencode('.jpg', resized_frame)
+            frame_bytes = buffer.tobytes()
+
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(video_stream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
