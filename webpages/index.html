@@ -45,11 +45,8 @@
       <!-- Vertical list of navigation links (stacked in a column via flex-direction: column) -->
       <!-- These replicate the main navbar links but are shown in the sidebar on mobile -->
       <li><a href="index.html">Dashboard</a></li>
-      <li><a href="livedata.html">Live Data</a></li>
-      <li><a href="camera.html">Camera</a></li>
       <li><a href="analytics.html">Analytics</a></li>
       <li><a href="controls.html">Controls</a></li>
-      <li><a href="systemstatus.html">SystemStatus</a></li>
       <li><a href="settings.html">Settings</a></li>
       <li><a href="about.html">About</a></li>
     </ul>
@@ -94,7 +91,7 @@
     </ul>
   </nav>
 
-  <main>
+<main>
     <h1>Dashboard</h1> <!--Main Header-->
     <h2>Current Sensor Values</h2> <!-- Sub Header -->
 
@@ -110,9 +107,9 @@
     <data style="color:white">Lower Moisture Sensor: <span id="moist1">--</span>%</data>
     <h3>&#8203;</h3>
 
-    <h2>Camera Preview</h2> <!-- Sub Header -->
-    <img src="{{ url_for('video_feed') }}" width="640" height="480" class="teamphoto"> <!-- Fetch Video-->
-</main>
+    <h2>Live Camera View</h2> <!-- Sub Header -->
+<img id="bg" src="/video_feed" class="teamphoto">
+/main>
 
  <!-- ===========================
        JAVASCRIPT FUNCTIONALITY
@@ -153,9 +150,6 @@ async function updateData() {
 }
 updateData();
 setInterval(updateData, 1000);
-
-
 </script>
 </body>
 </html>
-
