@@ -205,16 +205,17 @@ data {
 /*STacking on other screens to keep size*/
 @media (max-width: 700px) {
   .content-images {
-    flex-direction: column;       /* Stack vertically on small screens */
+    flex-direction: column;       /* Stack vertically for small screens */
     text-align: center;
   }
 
   .content-images h3 {
-    text-align: center;           /* Re-center text for mobile */
+    text-align: center;           /* center text for mobile/smal;l screen */
   }
 
   .content-images img.PhotoStyle1 {
-    max-width: 100%;              /* Let image scale full width */
+    max-width: 100%;              /* Let image scale full width whwene on small screeen */
     margin-top: 15px;
   }
 }
+ 
