@@ -151,7 +151,7 @@ h2 {
 h3 {
   font-size: 25px;
 }
-.PhotoStyle1 { /* TeamPhoto Format Settings*/
+.PhotoStyle1 { /* hunch logo Format Settings*/
         display: block;
         width: 100%;       /* size   */
         height: auto;     
@@ -159,7 +159,14 @@ h3 {
         border-radius: 10px; /*  rounded corners */
         border: 4px solid #b9b9b9e0
     }
-
+.PhotoStyle2 { /* TeamPhoto Format Settings*/
+        display: block;
+        width: 100%;       /* size   */
+        height: auto;     
+        margin: 20px auto; /* centers  */
+        border-radius: 10px; /*  rounded corners */
+        border: 4px solid #b9b9b9e0
+    }
 data {
       max-width: 1000px;       /*  centered on diff sizes */
       background-color: rgb(107, 102, 102);
@@ -189,7 +196,12 @@ data {
   height: auto;
   margin: 0;                      /* Remove auto-centering */
 }
-
+.content-images img.PhotoStyle2 {
+  flex: 0 0 auto;                 /* Prevent image from stretching */
+  max-width: 500px;               /* Control size */
+  height: auto;
+  margin: 0;                      /* Remove auto-centering */
+}
 /*STacking on other screens to keep size*/
 @media (max-width: 700px) {
   .content-images {
