@@ -13,14 +13,13 @@ body {
   min-height: 100vh;   /* Ensures body fills at least the full viewport height */
   
   /* Background image setup */
-  background: url('../webpages/images/nasarocket.jpg'); /* Sets NASA rocket image as background */
+  background: url('/images/nasarocket.jpg'); /* Sets NASA rocket image as background */
   background-size: cover;       /* Scales the image to cover entire background */
   background-repeat: no-repeat; /* Prevents image tiling */
   background-position: center;  /* Centers the image on the page */
 
   /* Font styling */
   font-family: Arial, sans-serif, 'Times New Roman', Times, serif;
-  font-size: 16px;
 }
 
 /* ===========================
@@ -110,7 +109,7 @@ nav li:first-child {
 =========================== */
 
 /* For smaller screens (below 1320px wide) */
-@media (max-width: 850px) {
+@media (max-width: 1320px) {
   .hideOnMobile {
     display: none;                                   /* Hide normal nav links */
   }
@@ -142,43 +141,6 @@ h1, h2, h3, data {
       text-align: center;     /* centers all headers */
     }
 
-h1 {
-  font-size: 50px
-}
-h2 {
-  font-size: 40px;
-}
-h3 {
-  font-size: 25px;
-}
-h4 {
-  font-size: 23px;
-}
-.PhotoStyle1 { /* hunch logo Format Settings*/
-        display: block;
-        width: 100%;       /* size   */
-        height: auto;     
-        margin: 20px auto; /* centers  */
-        border-radius: 10px; /*  rounded corners */
-        border: 4px solid #b9b9b9e0
-    }
-.PhotoStyle2 { /* TeamPhoto Format Settings*/
-        display: block;
-        width: 100%;       /* size   */
-        height: auto;     
-        margin: 20px auto; /* centers  */
-        border-radius: 10px; /*  rounded corners */
-        border: 4px solid #b9b9b9e0
-    }
-data {
-      max-width: 1000px;       /*  centered on diff sizes */
-      background-color: rgb(107, 102, 102);
-      padding: 15px 10px;
-      border-radius: 12px;
-      border: 2px solid rgb(94, 88, 88)
-
-
-}
 /*layout for text with images*/
 .content-images {
   display: flex;                  /* Put h3 and img side by side */
@@ -187,6 +149,7 @@ data {
   gap: 20px;                      /* Space between text and photo */
   margin-top: 20px;
 }
+
 
 .content-images h3, h4 {
   flex: 1;                        /* Text takes available space */
@@ -205,6 +168,41 @@ data {
   height: auto;
   margin: 0;                      /* Remove auto-centering */
 }
+
+.teamphoto { /* TeamPhoto Format Settings*/
+        display: block;
+        width: 100%;       /* size   */
+        height: auto;     
+        margin: 20px auto; /* centers  */
+        border-radius: 10px; /*  rounded corners */
+        border: 4px solid #b9b9b9e0
+    }
+
+.PhotoStyle1 { /* hunch logo Format Settings*/
+        display: block;
+        width: 100%;       /* size   */
+        height: auto;     
+        margin: 20px auto; /* centers  */
+        border-radius: 10px; /*  rounded corners */
+        border: 4px solid #b9b9b9e0
+    }
+.PhotoStyle2 { /* TeamPhoto Format Settings*/
+        display: block;
+        width: 100%;       /* size   */
+        height: auto;     
+        margin: 20px auto; /* centers  */
+        border-radius: 10px; /*  rounded corners */
+        border: 4px solid #b9b9b9e0
+    }
+
+data {
+      max-width: 1000px;       /*  centered on diff sizes */
+      background-color: rgb(107, 102, 102);
+      padding: 15px 10px;
+      border-radius: 12px;
+      border: 2px solid rgb(94, 88, 88)
+}
+
 /*STacking on other screens to keep size*/
 @media (max-width: 700px) {
   .content-images {
@@ -221,4 +219,3 @@ data {
     margin-top: 15px;
   }
 }
- 
