@@ -151,6 +151,9 @@ h2 {
 h3 {
   font-size: 25px;
 }
+h4 {
+  font-size: 23px;
+}
 .PhotoStyle1 { /* hunch logo Format Settings*/
         display: block;
         width: 100%;       /* size   */
@@ -185,7 +188,7 @@ data {
   margin-top: 20px;
 }
 
-.content-images h3 {
+.content-images h3, h4 {
   flex: 1;                        /* Text takes available space */
   text-align: left;               /* Override global center */
 }
