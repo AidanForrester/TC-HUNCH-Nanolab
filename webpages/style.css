@@ -20,6 +20,7 @@ body {
 
   /* Font styling */
   font-family: Arial, sans-serif, 'Times New Roman', Times, serif;
+  font-size: 16px;
 }
 
 /* ===========================
@@ -141,6 +142,15 @@ h1, h2, h3, data {
       text-align: center;     /* centers all headers */
     }
 
+h1 {
+  font-size: 50px
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 25px;
+}
 .PhotoStyle1 { /* TeamPhoto Format Settings*/
         display: block;
         width: 100%;       /* size   */
@@ -158,4 +168,41 @@ data {
       border: 2px solid rgb(94, 88, 88)
 
 
+}
+/*layout for text with images*/
+.content-images {
+  display: flex;                  /* Put h3 and img side by side */
+  align-items: center;            /* Vertically align them */
+  justify-content: space-between; /* Push text left, image right */
+  gap: 20px;                      /* Space between text and photo */
+  margin-top: 20px;
+}
+
+.content-images h3 {
+  flex: 1;                        /* Text takes available space */
+  text-align: left;               /* Override global center */
+}
+
+.content-images img.PhotoStyle1 {
+  flex: 0 0 auto;                 /* Prevent image from stretching */
+  max-width: 300px;               /* Control size */
+  height: auto;
+  margin: 0;                      /* Remove auto-centering */
+}
+
+/*STacking on other screens to keep size*/
+@media (max-width: 700px) {
+  .content-images {
+    flex-direction: column;       /* Stack vertically on small screens */
+    text-align: center;
+  }
+
+  .content-images h3 {
+    text-align: center;           /* Re-center text for mobile */
+  }
+
+  .content-images img.PhotoStyle1 {
+    max-width: 100%;              /* Let image scale full width */
+    margin-top: 15px;
+  }
 }
