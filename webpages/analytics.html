@@ -13,7 +13,7 @@
   <!-- Page title as it appears in the browser tab -->
   <title>Analytics</title>
   <!--Favicon -->
-  <link rel="icon" type="X" href="../webpages/images/Tri-CountyLogo.png">
+  <link rel="icon" type="X" href="../images/Tri-CountyLogo.png">
   <!-- Connects the external stylesheet that defines layout, colors, and responsiveness -->
   <link rel="stylesheet" href="style.css">
 </head>
@@ -112,9 +112,8 @@
   <main>
     <!DOCTYPE html>
 <html lang="en">
-<head>
   <meta charset="UTF-8">
-  <title>Live Moisture Chart</title>
+  <title>Upper Moisture Sensor Chart</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     #chart-container {
@@ -125,13 +124,14 @@
       font-weight: bold;
     }
   </style>
-</head>
+<span id="moist1" style="display:none">--</span>
+<span id="moist2" style="display:none">--</span>
 <body>
-  <h2>Live Moisture Data: <span id="moist2">--</span></h2>
+  <h2>Moisture Sensors Chart:</h2>
   <div id="chart-container">
     <canvas id="moistureChart"></canvas>
   </div>
-  <button onclick="exportChart()">Export Chart as Image</button>
+  <button onclick="exportChart()">Export Moisture Chart as Image</button>
 
   <script>
     const ctx = document.getElementById('moistureChart').getContext('2d');
@@ -139,14 +139,24 @@
       type: 'line',
       data: {
         labels: [],
-        datasets: [{
-          label: 'Moisture Level',
-          data: [],
-          borderColor: 'blue',
-          backgroundColor: 'rgba(0, 0, 255, 0.1)',
-          fill: true,
-          tension: 0.4
-        }]
+        datasets: [
+          {
+            label: 'Upper Moisture',
+            data: [],
+            borderColor: 'rgba(255, 215, 0)',
+            backgroundColor: 'rgba(255, 215, 0, 0.1)',
+            fill: true,
+            tension: 0.4
+          },
+          {
+            label: 'Lower Moisture',
+            data: [],
+            borderColor: 'blue',
+            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+            fill: true,
+            tension: 0.4
+          }
+        ]
       },
       options: {
         responsive: true,
@@ -157,19 +167,12 @@
       }
     });
 
-    function updateChart() {
-      const moistValue = document.getElementById('moist2').textContent;
-      const value = parseFloat(moistValue);
-      if (!isNaN(value)) {
+    function updateChart(data) {
+        moistureChart.data.datasets[0].data.push(parseFloat(data.moist1));
+        moistureChart.data.datasets[1].data.push(parseFloat(data.moist2));
         const now = new Date().toLocaleTimeString();
         moistureChart.data.labels.push(now);
-        moistureChart.data.datasets[0].data.push(value);
-        if (moistureChart.data.labels.length > 20) {
-          moistureChart.data.labels.shift();
-          moistureChart.data.datasets[0].data.shift();
-        }
         moistureChart.update();
-      }
     }
 
     function exportChart() {
@@ -179,17 +182,152 @@
       link.click();
     }
 
-    // Simulate live updates every 2 seconds
-    setInterval(() => {
-      // Simulate changing the span value (replace with real sensor update logic)
-      document.getElementById('moist2').textContent = (Math.random() * 20).toFixed(2);
-      updateChart();
-    }, 3000);
+    async function updateData() {
+        try {
+            const response = await fetch('/sensor_data');
+            const data = await response.json();
+            document.getElementById('moist1').innerText = data.moist1;
+            document.getElementById('moist2').innerText = data.moist2;
+
+            updateChart(data);
+        } catch (err) {
+          console.error('Failed to fetch sensor data:', err);
+        }
+    }  
+        setInterval(updateData, 1000);
   </script>
+
+  <title>VOC Chart</title>
+  <style>
+    #chart-container1 {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      width: 50%;
+      height: 300px;
+    }
+    #chart-container1 canvas {
+      width: 45%;                       /* each chart takes half the row */
+      height: 300px;  
+        }    
+  </style>
+  <h2>VOC Sensor Chart &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; Temperature Sensor Chart</h2>
+  <div id="chart-container1">
+    <canvas id="vocChart"></canvas>
+    <canvas id="tempChart"></canvas>
+  </div>
+  <button onclick="exportChart1()">Export VOC Chart as Image</button>
+  <span id="VOC" style="display:none">--</span>
+  <script>
+    const vocctx = document.getElementById('vocChart').getContext('2d');
+    const vocChart = new Chart(vocctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Gas Resistence (kΩ)',
+            data: [],
+            borderColor: 'rgba(8, 14, 75)',
+            backgroundColor: 'rgba(8, 14, 75, 0.1)',
+            fill: true,
+            tension: 0.4
+          }
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'Time' }},
+          y: { title: { display: true, text: 'GR (kΩ)' }}
+        }
+      }
+    });
+
+    function updateChart1(data) {
+        vocChart.data.datasets[0].data.push(parseFloat(data.VOC));
+        const now = new Date().toLocaleTimeString();
+        vocChart.data.labels.push(now);
+        vocChart.update();
+    }
+
+    function exportChart1() {
+      const link = document.createElement('a');
+      link.href = vocChart.toBase64Image();
+      link.download = "voc_chart.png";
+      link.click();
+    }
+
+    async function updateData1() {
+        try {
+            const response = await fetch('/sensor_data');
+            const data = await response.json();
+            document.getElementById('VOC').innerText = data.VOC;
+
+            updateChart1(data);
+        } catch (err) {
+          console.error('Failed to fetch sensor data:', err);
+        }
+    }
+        setInterval(updateData1, 1000);
+  </script>
+  <span id="temp" style="display:none">--</span>
+  <button onclick="exportChart2()">Export Temperature Chart as Image</button>
+  <script>
+    const tempctx = document.getElementById('tempChart').getContext('2d');
+    const tempChart = new Chart(tempctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Internal Temperature(°C)',
+            data: [],
+            borderColor: 'red',
+            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+            fill: true,
+            tension: 0.4
+          }
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'Time' }},
+          y: { title: { display: true, text: 'Temperature' }}
+        }
+      }
+    });
+
+    function updateChart2(data) {
+        tempChart.data.datasets[0].data.push(parseFloat(data.temperature));
+        const now = new Date().toLocaleTimeString();
+        tempChart.data.labels.push(now);
+        tempChart.update();
+    }
+
+    function exportChart2() {
+      const link = document.createElement('a');
+      link.href = tempChart.toBase64Image();
+      link.download = "temp_chart.png";
+      link.click();
+    }
+
+    async function updateData2() {
+        try {
+            const response = await fetch('/sensor_data');
+            const data = await response.json();
+            document.getElementById('temp').innerText = data.temperature;
+
+            updateChart2(data);
+        } catch (err) {
+          console.error('Failed to fetch sensor data:', err);
+        }
+    }
+        setInterval(updateData2, 1000);
+
+</script>
 </body>
 </html>
- </main>
-</body>
-</html>
-
-
