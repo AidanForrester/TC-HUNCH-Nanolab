@@ -7,6 +7,7 @@ import board
 import os
 
 import time
+import datetime
 from flask import Flask, Response, jsonify, send_from_directory, request, render_template
 import threading
 import subprocess
@@ -61,7 +62,7 @@ def sensor_data():
     tdsvolt = tds.voltage
     tdsraw = ((tdsvolt / 2.3) * 1000)
     TDS = int(round(tdsraw, 0))
-    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TD>
+    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TDS})
 
 video = cv2.VideoCapture(0)
 new_width = 640
@@ -102,13 +103,55 @@ def settings_form():
         file.write(str(target_humidity) + "\n")
     return f"Preferences Set!"
 
+previous = time()
+delta = 0
+istest = 0
+
+@app.route('/monitored_photos')
+def monitored_photos():
+    if istest == "0":
+        while True:
+                current = time()
+                delta += current - previous
+                previous = current
+                if delta == 21600:
+                    ret, frame = video.read()
+                    if not ret:
+                        break
+                    else:
+                        resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+                        cv2.imwrite(str(datetime.now()) + '.jpg', resized_frame)
+                        subprocess.run("mv " + str(datetime.now()) + ".jpg /TC-HUNCH-Nanolab/webpages/photos/" + str(datetime.now()) + ".jpg", capture_output=False, text=False, check=False, shell=True)
+    if istest == "1":
+        current = time()
+        foldername = str(current) + "Test"
+        while True:
+                current = time()
+                delta += current - previous
+                previous = current
+                if delta == 1:
+                    ret, frame = video.read()
+                    if not ret:
+                        break
+                    else:
+                        resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+                        cv2.imwrite(str(current) + '.jpg', resized_frame)
+                        subprocess.run("mv " + str(current) + ".jpg /TC-HUNCH-Nanolab/webpages/photos/" + str(foldername) + "/" + str(current) + ".jpg", capture_output=False, text=False, check=False, shell=True)
+                        
 if __name__ == "__main__":
         def background_sensor_task():
            with app.app_context():
             while True:
                 sensor_data()
                 time.sleep(2)
+        def background_photo_task():
+           with app.app_context():
+            while True:
+                monitored_photos()
         sensor_thread = threading.Thread(target=background_sensor_task)
+        photo_thread = threading.Thread(target=background_photo_task)
         sensor_thread.daemon = True
+        photo_thread.daemon = True
         sensor_thread.start()
+        photo_thread.start()
         app.run(host="0.0.0.0", port=5000)
