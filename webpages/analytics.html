@@ -5,7 +5,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Analytics</title>
-  <link rel="icon" type="X" href="../images/Tri-CountyLogo.png">
+<!--Favicon -->
+  <link rel="icon" type="X" href="../webpages/images/Tri-CountyLogo.png">
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -22,18 +23,33 @@
         </svg></a>
       </li>
 
+      <!-- Vertical list of navigation links (stacked in a column via flex-direction: column) -->
+      <!-- These replicate the main navbar links but are shown in the sidebar on mobile -->
       <li><a href="index.html">Dashboard</a></li>
       <li><a href="analytics.html">Analytics</a></li>
+      <li><a href="photos.html">Photos</a></li>
       <li><a href="controls.html">Controls</a></li>
       <li><a href="settings.html">Settings</a></li>
       <li><a href="about.html">About</a></li>
     </ul>
 
-    <ul>
-      <li><a href="#">TC NANOLABS HUNCH</a></li>
+    </ul>
 
+    <!-- ===========================
+         MAIN NAVBAR (DESKTOP VIEW)
+         =========================== -->
+    <!-- This <ul> is always visible on desktop screens.
+         On smaller screens (<1320px), CSS hides most links
+         and shows only the hamburger button. -->
+    <ul>
+      <!-- Project name (aligned left via nav li:first-child { margin-right:auto; }) -->
+      <li><a href="index.html">TC NANOLAB HUNCH</a></li> <!--Top Left Name-->
+
+      <!-- Standard navigation links.
+           These are visible on desktop but hidden on smaller screens (CSS: .hideOnMobile {display:none}) -->
       <li class="hideOnMobile"><a href="index.html">Dashboard</a></li>
       <li class="hideOnMobile"><a href="analytics.html">Analytics</a></li>
+      <li class="hideOnMobile"><a href="photos.html">Photos</a></li>
       <li class="hideOnMobile"><a href="controls.html">Controls</a></li>
       <li class="hideOnMobile"><a href="settings.html">Settings</a></li>
       <li class="hideOnMobile"><a href="about.html">About</a></li>
