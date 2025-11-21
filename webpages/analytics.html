@@ -1,157 +1,484 @@
-import adafruit_bme680
-from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
-import cv2
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics</title>
+<!--Favicon -->
+  <link rel="icon" type="X" href="../webpages/images/Tri-CountyLogo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
 
-import digitalio
-import board
-import os
+<body>
 
-import time
-import datetime
-from flask import Flask, Response, jsonify, send_from_directory, request, render_template
-import threading
-import subprocess
-import linecache
+  <!-- NAVIGATION BAR -->
+  <nav>
+    <ul class="sidebar">
+      <li onclick="hideSidebar()"><a href="#">
+        <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 96 960 960">
+          <path d="m249 849-42-42 231-231-231-231 42-42 
+                   231 231 231-231 42 42-231 231 
+                   231 231-42 42-231-231-231 231Z"/>
+        </svg></a>
+      </li>
 
-WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages")
-WEB_DIR = os.path.abspath(WEB_DIR)
+      <!-- Vertical list of navigation links (stacked in a column via flex-direction: column) -->
+      <!-- These replicate the main navbar links but are shown in the sidebar on mobile -->
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="analytics.html">Analytics</a></li>
+      <li><a href="photos.html">Photos</a></li>
+      <li><a href="controls.html">Controls</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
 
-app = Flask(__name__)
+    </ul>
 
-time.sleep(1)
-i2c_bus = board.I2C() ## Initialization of sensors
-bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c_bus, address=0x77)
-try:
-     line = linecache.getline("config.txt", 1)
-     ambient_pressure = line
-except Exception as e:
-     ambient_pressure = 1013
-     print("Please Configure Settings")
-bme680.seaLevelhPa = ambient_pressure
+    <!-- ===========================
+         MAIN NAVBAR (DESKTOP VIEW)
+         =========================== -->
+    <!-- This <ul> is always visible on desktop screens.
+         On smaller screens (<1320px), CSS hides most links
+         and shows only the hamburger button. -->
+    <ul>
+      <!-- Project name (aligned left via nav li:first-child { margin-right:auto; }) -->
+      <li><a href="index.html">TC NANOLAB HUNCH</a></li> <!--Top Left Name-->
 
-ads = ADS1115(i2c_bus, address=0x48)
-m1 = AnalogIn(ads, ads1x15.Pin.A0)
-m2 = AnalogIn(ads, ads1x15.Pin.A1)
-tds = AnalogIn(ads, ads1x15.Pin.A2)
-ph = AnalogIn(ads, ads1x15.Pin.A3)
+      <!-- Standard navigation links.
+           These are visible on desktop but hidden on smaller screens (CSS: .hideOnMobile {display:none}) -->
+      <li class="hideOnMobile"><a href="index.html">Dashboard</a></li>
+      <li class="hideOnMobile"><a href="analytics.html">Analytics</a></li>
+      <li class="hideOnMobile"><a href="photos.html">Photos</a></li>
+      <li class="hideOnMobile"><a href="controls.html">Controls</a></li>
+      <li class="hideOnMobile"><a href="settings.html">Settings</a></li>
+      <li class="hideOnMobile"><a href="about.html">About</a></li>
 
-maxm1 = 1.2558 
-maxm2 = 1.7690 
-minm1 = 0.16073 
-minm2 = 0.62334
+      <li class="menu-button" onclick="showSidebar()"><a href="#">
+        <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 96 960 960">
+          <path d="M120 816v-60h720v60H120Z
+                   M120 606v-60h720v60H120Z
+                   M120 396v-60h720v60H120Z"/>
+        </svg></a>
+      </li>
+    </ul>
+  </nav>
 
-@app.route('/sensor_data')
-def sensor_data():
-    humidity = round(bme680.humidity, 1)
-    temperature = round(bme680.temperature, 1)
-    try:
-     voc = round(bme680.gas, 1) / 1000
-     lastvoc = voc
-    except Exception as e:
-     voc = lastvoc
-    moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
-    if moist1 >= 100:
-        moist1 = 100
-    if moist1 <= 0:
-        moist1 = 0
-    moist2 = round(((m2.voltage - maxm2) / (minm2 - maxm2)) * 100, 0)
-    if moist2 >= 100:
-        moist2 = 100
-    if moist2 <= 0:
-        moist2 = 0
-    tdsvolt = tds.voltage
-    tdsraw = ((tdsvolt / 2.3) * 1000)
-    TDS = int(round(tdsraw, 0))
-    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TDS})
+  <script>
+    function showSidebar() {
+      document.querySelector('.sidebar').style.display = 'flex';
+    }
+    function hideSidebar() {
+      document.querySelector('.sidebar').style.display = 'none';
+    }
+  </script>
 
-video = cv2.VideoCapture(0)
-new_width = 640
-new_height = 480
+  <main>
 
-def video_stream():
-    while(True):
-        ret, frame = video.read()
-        if not ret:
-            break
-        else:
-            resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-            ret, buffer = cv2.imencode('.jpg', resized_frame)
-            frame_bytes = buffer.tobytes()
+<!-- ===========================
+     MOISTURE CHART
+     =========================== -->
+<h2>Moisture Sensors Chart:</h2>
+<div id="chart-container" style="width:80%; margin:auto;">
+  <canvas id="moistureChart"></canvas>
+</div>
 
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+<button onclick="exportChart()">Export Moisture Chart (PNG)</button>
+<button onclick="saveMoistureJSON()">Export Moisture Data (JSON)</button>
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(video_stream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
+<span id="moist1" style="display:none">--</span>
+<span id="moist2" style="display:none">--</span>
 
-@app.route('/', defaults={'path': 'index.html'})
-@app.route('/<path:path>')
-def serve_page(path):
-    return send_from_directory(WEB_DIR, path)
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-@app.route('/settings_form', methods=['POST'])
-def settings_form():
-    ambient_pressure = request.form['ap']
-    bme680.seaLevelhPa = ambient_pressure
+<script>
+const ctx = document.getElementById('moistureChart').getContext('2d');
+const moistureChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [
+      {
+        label: 'Upper Moisture',
+        data: [],
+        borderColor: 'rgba(255, 215, 0)',
+        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+        fill: true,
+        tension: 0.4
+      },
+      {
+        label: 'Lower Moisture',
+        data: [],
+        borderColor: 'blue',
+        backgroundColor: 'rgba(0, 0, 255, 0.1)',
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { title: { display: true, text: 'Moisture' } }
+    }
+  }
+});
 
-    ambient_temp = request.form['at']
-    target_humidity = request.form['th']
-    with open('config.txt', 'w') as file:
-        file.write(str(ambient_pressure) + "\n")
-        file.write(str(ambient_temp) + "\n")
-        file.write(str(target_humidity) + "\n")
-    return f"Preferences Set!"
+function updateChart(data) {
+  moistureChart.data.datasets[0].data.push(parseFloat(data.moist1));
+  moistureChart.data.datasets[1].data.push(parseFloat(data.moist2));
+  moistureChart.data.labels.push(new Date().toLocaleTimeString());
+  moistureChart.update();
+}
 
-previous = time()
-delta = 0
-istest = 0
+function exportChart() {
+  const link = document.createElement('a');
+  link.href = moistureChart.toBase64Image();
+  link.download = 'moisture_chart.png';
+  link.click();
+}
 
-@app.route('/monitored_photos')
-def monitored_photos():
-    if istest == "0":
-        while True:
-                current = time()
-                delta += current - previous
-                previous = current
-                if delta == 21600:
-                    ret, frame = video.read()
-                    if not ret:
-                        break
-                    else:
-                        resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-                        cv2.imwrite(str(datetime.now()) + '.jpg', resized_frame)
-                        subprocess.run("mv " + str(datetime.now()) + ".jpg /TC-HUNCH-Nanolab/webpages/photos/" + str(datetime.now()) + ".jpg", capture_output=False, text=False, check=False, shell=True)
-    if istest == "1":
-        current = time()
-        foldername = str(current) + "Test"
-        while True:
-                current = time()
-                delta += current - previous
-                previous = current
-                if delta == 1:
-                    ret, frame = video.read()
-                    if not ret:
-                        break
-                    else:
-                        resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-                        cv2.imwrite(str(current) + '.jpg', resized_frame)
-                        subprocess.run("mv " + str(current) + ".jpg /TC-HUNCH-Nanolab/webpages/photos/" + str(foldername) + "/" + str(current) + ".jpg", capture_output=False, text=False, check=False, shell=True)
-                        
-if __name__ == "__main__":
-        def background_sensor_task():
-           with app.app_context():
-            while True:
-                sensor_data()
-                time.sleep(2)
-        def background_photo_task():
-           with app.app_context():
-            while True:
-                monitored_photos()
-        sensor_thread = threading.Thread(target=background_sensor_task)
-        photo_thread = threading.Thread(target=background_photo_task)
-        sensor_thread.daemon = True
-        photo_thread.daemon = True
-        sensor_thread.start()
-        photo_thread.start()
-        app.run(host="0.0.0.0", port=5000)
+async function updateData() {
+  try {
+    const response = await fetch('/sensor_data');
+    const data = await response.json();
+    document.getElementById('moist1').innerText = data.moist1;
+    document.getElementById('moist2').innerText = data.moist2;
+    updateChart(data);
+  } catch (err) {
+    console.error('Failed to fetch sensor data:', err);
+  }
+}
+setInterval(updateData, 1000);
+</script>
+
+<!-- ===========================
+     VOC + TEMP CHARTS
+     =========================== -->
+<h2>VOC Sensor Chart &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Temperature Sensor Chart</h2>
+
+<div id="chart-container1" style="display:flex; justify-content:space-around; width:50%; height:300px;">
+  <canvas id="vocChart"></canvas>
+  <canvas id="tempChart"></canvas>
+</div>
+<h3><button onclick="exportChart1()">Export VOC Chart (PNG)</button>
+<button onclick="saveVOCJSON()">Export VOC Data (JSON)</button></h3>
+<h3><button onclick="exportChart2()">Export Temperature Chart (PNG)</button>
+<button onclick="saveTempJSON()">Export Temperature Data (JSON)</button></h3>
+
+
+<span id="VOC" style="display:none">--</span>
+<span id="temp" style="display:none">--</span>
+
+<script>
+/* VOC Chart */
+const vocctx = document.getElementById('vocChart').getContext('2d');
+const vocChart = new Chart(vocctx, {
+  type: 'line',
+  data: { labels: [], datasets: [{
+      label: 'Gas Resistance (kΩ)',
+      data: [],
+      borderColor: 'rgba(8, 14, 75)',
+      backgroundColor: 'rgba(8, 14, 75, 0.1)',
+      fill: true,
+      tension: 0.4
+  }]},
+  options: {
+    maintainAspectRatio: false,
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { title: { display: true, text: 'GR (kΩ)' } }
+    }
+  }
+});
+
+function updateChart1(data) {
+  vocChart.data.datasets[0].data.push(parseFloat(data.VOC));
+  vocChart.data.labels.push(new Date().toLocaleTimeString());
+  vocChart.update();
+}
+
+function exportChart1() {
+  const link = document.createElement('a');
+  link.href = vocChart.toBase64Image();
+  link.download = "voc_chart.png";
+  link.click();
+}
+
+async function updateData1() {
+  try {
+    const response = await fetch('/sensor_data');
+    const data = await response.json();
+    document.getElementById('VOC').innerText = data.VOC;
+    updateChart1(data);
+  } catch (err) {
+    console.error('Failed to fetch sensor data:', err);
+  }
+}
+setInterval(updateData1, 1000);
+
+
+/* Temperature Chart */
+const tempctx = document.getElementById('tempChart').getContext('2d');
+const tempChart = new Chart(tempctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Internal Temperature (°C)',
+      data: [],
+      borderColor: 'red',
+      backgroundColor: 'rgba(255, 0, 0, 0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  },
+  options: {
+    maintainAspectRatio: false,
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { title: { display: true, text: 'Temperature' } }
+    }
+  }
+});
+
+function updateChart2(data) {
+  tempChart.data.datasets[0].data.push(parseFloat(data.temperature));
+  tempChart.data.labels.push(new Date().toLocaleTimeString());
+  tempChart.update();
+}
+
+function exportChart2() {
+  const link = document.createElement('a');
+  link.href = tempChart.toBase64Image();
+  link.download = "temp_chart.png";
+  link.click();
+}
+
+async function updateData2() {
+  try {
+    const response = await fetch('/sensor_data');
+    const data = await response.json();
+    document.getElementById('temp').innerText = data.temperature;
+    updateChart2(data);
+  } catch (err) {
+    console.error('Failed to fetch sensor data:', err);
+  }
+}
+setInterval(updateData2, 1000);
+</script>
+
+<!-- ===========================
+     TDS + pH CHARTS
+     =========================== -->
+<h2>TDS Sensor Chart &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;pH Sensor Chart</h2>
+
+<div id="chart-container1" style="display:flex; justify-content:space-around; width:50%; height:300px;">
+  <canvas id="tdsChart"></canvas>
+  <canvas id="phChart"></canvas>
+</div>
+<h3><button onclick="exportCharttds()">Export TDS Chart (PNG)</button>
+<button onclick="saveTDSJSON()">Export TDS Data (JSON)</button></h3>
+<h3><button onclick="exportChartph()">Export pH Chart (PNG)</button>
+<button onclick="savepHJSON()">Export pH Data (JSON)</button></h3>
+
+<span id="tds" style="display:none">--</span>
+<span id="pH" style="display:none">--</span>
+
+<script>
+/* tds Chart */
+const tdsctx = document.getElementById('tdsChart').getContext('2d');
+const tdsChart = new Chart(tdsctx, {
+  type: 'line',
+  data: { labels: [], datasets: [{
+      label: 'TDS (ppm)',
+      data: [],
+      borderColor: 'rgba(0,206,200)',
+      backgroundColor: 'rgba(0,206,200, 0.1)',
+      fill: true,
+      tension: 0.4
+  }]},
+  options: {
+    maintainAspectRatio: false,
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { title: { display: true, text: 'TDS (ppm)' } }
+    }
+  }
+});
+
+function updateChart6(data) {
+  tdsChart.data.datasets[0].data.push(parseFloat(data.tds));
+  tdsChart.data.labels.push(new Date().toLocaleTimeString());
+  tdsChart.update();
+}
+
+function exportChart6() {
+  const link = document.createElement('a');
+  link.href = tdsChart.toBase64Image();
+  link.download = "tds_chart.png";
+  link.click();
+}
+
+async function updateData6() {
+  try {
+    const response = await fetch('/sensor_data');
+    const data = await response.json();
+    document.getElementById('tds').innerText = data.tds;
+    updateChart6(data);
+  } catch (err) {
+    console.error('Failed to fetch sensor data:', err);
+  }
+}
+setInterval(updateData6, 1000);
+
+
+/* pH Chart */
+const phctx = document.getElementById('phChart').getContext('2d');
+const phChart = new Chart(phctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'pH',
+      data: [],
+      borderColor: 'rgba(104, 157, 113)',
+      backgroundColor: 'rgba(104, 157, 113, 0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  },
+  options: {
+    maintainAspectRatio: false,
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { title: { display: true, text: 'pH' } }
+    }
+  }
+});
+
+function updateChart7(data) {
+  phChart.data.datasets[0].data.push(parseFloat(data.ph));
+  phChart.data.labels.push(new Date().toLocaleTimeString());
+  phChart.update();
+}
+
+function exportChart7() {
+  const link = document.createElement('a');
+  link.href = phChart.toBase64Image();
+  link.download = "pH_chart.png";
+  link.click();
+}
+
+async function updateData7() {
+  try {
+    const response = await fetch('/sensor_data');
+    const data = await response.json();
+    document.getElementById('ph').innerText = data.ph;
+    updateChart7(data);
+  } catch (err) {
+    console.error('Failed to fetch sensor data:', err);
+  }
+}
+setInterval(updateData7, 1000);
+</script>
+
+<!-- ===========================
+     JSON EXPORT SECTION
+     =========================== -->
+<script>
+// Moisture JSON Export
+function saveMoistureJSON() {
+  const data = moistureChart.data.labels.map((label, i) => ({
+    time: label,
+    upper: moistureChart.data.datasets[0].data[i],
+    lower: moistureChart.data.datasets[1].data[i]
+  }));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "moisture_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// VOC JSON Export
+function saveVOCJSON() {
+  const data = vocChart.data.labels.map((label, i) => ({
+    time: label,
+    voc: vocChart.data.datasets[0].data[i]
+  }));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "voc_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Temperature JSON Export
+function saveTempJSON() {
+  const data = tempChart.data.labels.map((label, i) => ({
+    time: label,
+    temperature: tempChart.data.datasets[0].data[i]
+  }));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "temperature_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// TDS JSON Export
+function saveTDSJSON() {
+  const data = tdsChart.data.labels.map((label, i) => ({
+    time: label,
+    tds: tdsChart.data.datasets[0].data[i],
+  }));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "tds_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// pH JSON Export
+function savepHJSON() {
+  const data = phChart.data.labels.map((label, i) => ({
+    time: label,
+    ph: phChart.data.datasets[0].data[i]
+  }));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "pH_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</main>
+</body>
+</html>
