@@ -114,18 +114,23 @@
   </script>
  <main>
     <h1>Photos View</h1>
-    <h2>12 Hour Images</h2>
-    
+    <h2>6 Hour Images</h2>
  </main>
+ <script>
+  fetch("/gallery")
+    .then(res => res.json())
+    .then(images => {
+      const gallery = document.getElementById("gallery");
 
-
- 
-
-
-
-
-
+      images.forEach(img => {
+        const el = document.createElement("img");
+        el.src = "/images/" + img;
+        el.style.width = "200px";
+        el.style.height = "200px";
+        el.style.objectFit = "cover";
+        gallery.appendChild(el);
+      });
+    });
+ </script>
 </body>
 </html>
-
-
