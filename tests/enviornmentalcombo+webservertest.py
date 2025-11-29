@@ -7,11 +7,12 @@ import board
 import os
 
 import time
-import datetime
+from datetime import datetime
 from flask import Flask, Response, jsonify, send_from_directory, request, render_template
 import threading
-import subprocess
 import linecache
+import shutil
+import json
 
 WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages")
 WEB_DIR = os.path.abspath(WEB_DIR)
@@ -35,9 +36,9 @@ m2 = AnalogIn(ads, ads1x15.Pin.A1)
 tds = AnalogIn(ads, ads1x15.Pin.A2)
 ph = AnalogIn(ads, ads1x15.Pin.A3)
 
-maxm1 = 1.2558 
-maxm2 = 1.7690 
-minm1 = 0.16073 
+maxm1 = 1.2558
+maxm2 = 1.7690
+minm1 = 0.16073
 minm2 = 0.62334
 
 @app.route('/sensor_data')
@@ -103,41 +104,64 @@ def settings_form():
         file.write(str(target_humidity) + "\n")
     return f"Preferences Set!"
 
-previous = time()
+previous = time.time()
 delta = 0
-istest = 0
+istest = "0"
+startingphoto = True
 
-@app.route('/monitored_photos')
 def monitored_photos():
-    if istest == "0":
-        while True:
-                current = time()
-                delta += current - previous
-                previous = current
-                if delta == 21600:
+    global previous, delta, istests, testtime, startingphoto
+    while True:
+        if istest == "0":
+                current = time.time()
+                delta = current - previous
+                if startingphoto == True:
+                     delta = 21600
+                     startingphoto = False
+                currenttimeget = str(datetime.now())
+                currenttime = currenttimeget.replace(" ", "at")
+                if delta >= 21600:
                     ret, frame = video.read()
                     if not ret:
                         break
                     else:
                         resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-                        cv2.imwrite(str(datetime.now()) + '.jpg', resized_frame)
-                        subprocess.run("mv " + str(datetime.now()) + ".jpg /TC-HUNCH-Nanolab/webpages/photos/" + str(datetime.now()) + ".jpg", capture_output=False, text=False, check=False, shell=True)
-    if istest == "1":
-        current = time()
-        foldername = str(current) + "Test"
-        while True:
-                current = time()
-                delta += current - previous
-                previous = current
-                if delta == 1:
+                        cv2.imwrite(currenttime + '.jpg', resized_frame)
+                        folder = '/home/nanolab/TC-HUNCH-Nanolab/webpages/photos/'
+                        shutil.move(currenttime + '.jpg', folder + currenttime + '.jpg')
+                        delta = 0
+                        newphoto = True
+                        previous = current
+        if istest == "1":
+                if testtime is None:
+                      testtime = datetime.now()
+                      folder2 = "/TC-HUNCH-Nanolab/webpages/photos/" + str(testtime)
+                currenttimeget = str(datetime.now())
+                currenttime = currenttimeget.replace(" ", "at")
+                current = time.time()
+                delta = current - previous
+
+                if delta >= 1:
                     ret, frame = video.read()
                     if not ret:
                         break
                     else:
                         resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-                        cv2.imwrite(str(current) + '.jpg', resized_frame)
-                        subprocess.run("mv " + str(current) + ".jpg /TC-HUNCH-Nanolab/webpages/photos/" + str(foldername) + "/" + str(current) + ".jpg", capture_output=False, text=False, check=False, shell=True)
-                        
+                        cv2.imwrite(currenttime + '.jpg', resized_frame)
+                        shutil.move(currenttime + '.jpg', folder2 + currenttime + '.jpg')
+                        previous = current
+                        delta = 0
+                        newphoto = True
+        photolistlocation = "TC-HUNCH-Nanolab/webpages/photos/photolist.json"
+        if newphoto == True:
+                try:
+                        with open(photolistlocation, 'r') as f:
+                             data = json.load
+                except FileNotFoundError:
+                        with open('photolist.json', 'w') as f:
+                             json.dump([], f, indent = 4)
+                        shutil.move('/home/nanolab/photolist.json', photolistlocation)
+
 if __name__ == "__main__":
         def background_sensor_task():
            with app.app_context():
