@@ -108,9 +108,11 @@ previous = time.time()
 delta = 0
 istest = "0"
 startingphoto = True
+photolistlocation = "TC-HUNCH-Nanolab/webpages/photos/photolist.json"
+testtime = None
 
 def monitored_photos():
-    global previous, delta, istests, testtime, startingphoto
+    global previous, delta, istests, testtime, startingphoto, photolistlocation
     while True:
         if istest == "0":
                 current = time.time()
@@ -132,6 +134,9 @@ def monitored_photos():
                         delta = 0
                         newphoto = True
                         previous = current
+                        photolocation = str(folder) + str(currenttime) + '.jpg'
+                        if testtime is not None:
+                             testtime = None
         if istest == "1":
                 if testtime is None:
                       testtime = datetime.now()
@@ -151,17 +156,20 @@ def monitored_photos():
                         shutil.move(currenttime + '.jpg', folder2 + currenttime + '.jpg')
                         previous = current
                         delta = 0
+                        photolocation = str(folder2) + str(currenttime) + '.jpg'
                         newphoto = True
-        photolistlocation = "TC-HUNCH-Nanolab/webpages/photos/photolist.json"
         if newphoto == True:
                 try:
                         with open(photolistlocation, 'r') as f:
-                             data = json.load
+                             data = json.load(f)
+                        data["photos"].append(photolocation)
+                        with open(photolistlocation, 'w') as f:
+                             json.dump(data, f, indent=4)
                 except FileNotFoundError:
                         with open('photolist.json', 'w') as f:
-                             json.dump([], f, indent = 4)
+                             json.dump({"photos": [photolocation]}, f, indent = 4)
                         shutil.move('/home/nanolab/photolist.json', photolistlocation)
-
+                newphoto = False
 if __name__ == "__main__":
         def background_sensor_task():
            with app.app_context():
