@@ -30,7 +30,7 @@
          and only becomes visible when the hamburger icon is clicked. -->
     <ul class="sidebar">
 
-      <!-- Close ("X") button â triggers hideSidebar() when clicked -->
+      <!-- Close ("X") button — triggers hideSidebar() when clicked -->
       <li onclick="hideSidebar()">
         <a href="#">
           <!-- SVG X icon -->
@@ -114,12 +114,18 @@
   </script>
  <main>
     <h1>Photos View</h1>
-    <h2>6 Hourly Photos</h2>
 <style>
 #gallery {
      display: flex;
      flex-wrap:wrap;
      gap:10px;
+     justify-content:center;
+}
+
+#testgallery {
+     display: flex;
+     flex-wrap: wrap;
+     gap:7px;
      justify-content:center;
 }
 
@@ -131,8 +137,43 @@
     border-radius: 10px;
     border: 4px solid #b9b9b9e0
 }
+
+#testgallery img {
+    width: 100%;
+    max-width: 175px;
+    height: auto;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 4px solid #b9b9b9e0
+}
 </style>
-<div id="gallery"></div> 
+
+<h2>Test Photos (5 Per Test)</h2>
+<div id="testgallery"></div>
+<script>
+ function loadtestgallery() {
+  fetch("/photos/photolist.json", {cache: "no-store"})
+   .then(res => res.json())
+   .then(data => {
+   const testgallery = document.getElementById("testgallery");
+   const testexisting = new Set(
+         Array.from(testgallery.querySelectorAll("img")).map(img => img.src)
+   );
+const testphotos = data.testphotos.slice().reverse();
+testphotos.forEach(path => {
+     if (!testexisting.has(path)) {
+          const img = document.createElement("img");
+          img.src = path
+          testgallery.appendChild(img);
+     }
+  });
+ })
+}
+loadtestgallery()
+setinterval(loadtestgallery, 5000)  
+</script>
+<h2>6 Hourly Photos</h2>
+<div id="gallery"></div>
 <script>
  function loadGallery() { 
   fetch("/photos/photolist.json", {cache: "no-store"})
@@ -142,7 +183,8 @@
     const existing = new Set(
          Array.from(gallery.querySelectorAll("img")).map(img => img.src)
     );  
- data.photos.forEach(path => {
+ const photos = data.photos.slice().reverse();
+ photos.forEach(path => {
      if (!existing.has(path)) {
         const img = document.createElement("img");
 	img.src = path
