@@ -120,6 +120,7 @@ def monitored_photos():
                 if startingphoto == True:
                      delta = 21600
                      startingphoto = False
+                dataset = "photos"
                 currenttimeget = str(datetime.now())
                 currenttime = currenttimeget.replace(" ", "at")
                 if delta >= 21600:
@@ -141,6 +142,7 @@ def monitored_photos():
                 if testtime is None:
                       testtime = datetime.now()
                       folder2 = "/TC-HUNCH-Nanolab/webpages/photos/" + str(testtime)
+                dataset = "testphotos"
                 currenttimeget = str(datetime.now())
                 currenttime = currenttimeget.replace(" ", "at")
                 current = time.time()
@@ -162,12 +164,14 @@ def monitored_photos():
                 try:
                         with open(photolistlocation, 'r') as f:
                              data = json.load(f)
-                        data["photos"].append(photolocation)
+                        if dataset not in data:
+                             data[dataset] = []
+                        data[dataset].append(photolocation)
                         with open(photolistlocation, 'w') as f:
                              json.dump(data, f, indent=4)
                 except FileNotFoundError:
                         with open('photolist.json', 'w') as f:
-                             json.dump({"photos": [photolocation]}, f, indent = 4)
+                             json.dump({dataset: [photolocation]}, f, indent = 4)
                         shutil.move('/home/nanolab/photolist.json', photolistlocation)
                 newphoto = False
 @app.route('/photolist.json')
