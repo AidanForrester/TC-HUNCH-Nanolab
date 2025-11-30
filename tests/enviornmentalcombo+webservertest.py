@@ -134,7 +134,7 @@ def monitored_photos():
                         delta = 0
                         newphoto = True
                         previous = current
-                        photolocation = str(folder) + str(currenttime) + '.jpg'
+                        photolocation = 'photos/' + str(currenttime) + '.jpg'
                         if testtime is not None:
                              testtime = None
         if istest == "1":
@@ -156,7 +156,7 @@ def monitored_photos():
                         shutil.move(currenttime + '.jpg', folder2 + currenttime + '.jpg')
                         previous = current
                         delta = 0
-                        photolocation = str(folder2) + str(currenttime) + '.jpg'
+                        photolocation = 'photos/' + str(timetest) + '/' + str(currenttime) + '.jpg'
                         newphoto = True
         if newphoto == True:
                 try:
@@ -170,6 +170,14 @@ def monitored_photos():
                              json.dump({"photos": [photolocation]}, f, indent = 4)
                         shutil.move('/home/nanolab/photolist.json', photolistlocation)
                 newphoto = False
+@app.route('/photolist.json')
+def photo_json():
+	return send_from_directory("../webpages", "photolist.json")
+
+@app.route('/photos/<path:filename>')
+def photos(filename):
+	return send_from_directory("../webpages/photos", filename)
+
 if __name__ == "__main__":
         def background_sensor_task():
            with app.app_context():
@@ -186,4 +194,4 @@ if __name__ == "__main__":
         photo_thread.daemon = True
         sensor_thread.start()
         photo_thread.start()
-        app.run(host="0.0.0.0", port=5000)
+        app.run(host="0.0.0.0", port=5000, debug=False)
