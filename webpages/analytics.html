@@ -280,9 +280,9 @@ setInterval(updateData2, 1000);
   <canvas id="tdsChart"></canvas>
   <canvas id="phChart"></canvas>
 </div>
-<h3><button onclick="exportCharttds()">Export TDS Chart (PNG)</button>
+<h3><button onclick="exportChart6()">Export TDS Chart (PNG)</button>
 <button onclick="saveTDSJSON()">Export TDS Data (JSON)</button></h3>
-<h3><button onclick="exportChartph()">Export pH Chart (PNG)</button>
+<h3><button onclick="exportChart7()">Export pH Chart (PNG)</button>
 <button onclick="savepHJSON()">Export pH Data (JSON)</button></h3>
 
 <span id="tds" style="display:none">--</span>
@@ -477,8 +477,33 @@ function savepHJSON() {
   a.click();
   URL.revokeObjectURL(url);
 }
-</script>
 
+
+// Save all at once (JSon)
+function saveAlljson() {
+  // Call each EXport function seperately
+  saveMoistureJSON();
+  saveVOCJSON();
+  saveTempJSON();
+  saveTDSJSON();
+  savepHJSON();
+}
+// Save all at once (Img)
+function saveAllimg() {
+  // Call each EXport function seperately
+  exportChart();
+  exportChart1();
+  exportChart2();
+  exportChart6();
+  exportChart7();
+  
+
+}
+
+
+</script>
+<button onclick="saveAllimg()">Save All Img</button>
+<button onclick="saveAlljson()">Save All Json</button>
 </main>
 </body>
 </html>
