@@ -22,6 +22,35 @@ body {
   font-family: Arial, sans-serif, 'Times New Roman', Times, serif;
 }
 
+
+/* ===============================
+    Button Styling
+===============================*/
+.button1 { /*Base Styling*/
+  background-color: #007bff; 
+  color: white; 
+  padding: 12px 24px; 
+  border: none; 
+  border-radius: 8px; /* Slightly rounded corners */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 16px; /*  font size */
+  font-weight: bold; /* Bold text  */
+  cursor: pointer; /* shows interactable */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease; /*  hover effects */
+}
+/*On Button Hover*/
+.button1:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /*Shadow*/
+  transform: translateY(-2px); 
+}
+
+.button1:active {
+  background-color: #004085; /* Even darker blue when we click it */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /*  pressing */
+  transform: translateY(0); /* Returns to og position */
+}
 /* ===========================
    NAVIGATION BAR STYLING
 =========================== */
