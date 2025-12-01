@@ -19,5 +19,5 @@ This will install the following dependencies:
 
 ## Usage Instructions
 To make the program work, you must work in a python virtual enviornment by entering these lines:
-``python3 -m venv --system-site-packages myenv``
-``source myenv/bin/activate``
+``python3 -m venv --system-site-packages nanolabenvenv``
+``source nanolabenv/bin/activate``
