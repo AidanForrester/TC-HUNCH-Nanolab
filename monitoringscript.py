@@ -1,6 +1,7 @@
 import adafruit_bme680
 from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
 import cv2
+import neopixel
 
 import digitalio
 import board
@@ -40,6 +41,12 @@ maxm1 = 1.2558
 maxm2 = 1.7690
 minm1 = 0.16073
 minm2 = 0.62334
+
+pumppin = digitalio.DigitalInOut(board.GP1)
+ledpin = board.GP2
+pixelcount = 20
+bright = 0.3
+pixels = neopixel.Neopixel(ledpin, pixelcount, brightness=bright, auto_write=False)
 
 @app.route('/sensor_data')
 def sensor_data():
@@ -104,9 +111,23 @@ def settings_form():
         file.write(str(target_humidity) + "\n")
     return f"Preferences Set!"
 
+@app.route('/controlbutton', methods=['GET', 'POST'])
+def controls():
+    if request.method == 'POST':
+        if 'growmode' in request.form:
+            growmode = True
+        elif 'viewmode' in request.form:
+            viewmode = True
+        elif 'manualphoto' in request.form:
+            manualphoto = True
+        elif 'starttest' in request.form:
+            istest = True,
+            reference = time.time()
+             
 previous = time.time()
 delta = 0
 istest = "0"
+reference = 1
 startingphoto = True
 photolistlocation = "TC-HUNCH-Nanolab/webpages/photos/photolist.json"
 testtime = None
@@ -158,8 +179,25 @@ def monitored_photos():
                         shutil.move(currenttime + '.jpg', folder2 + currenttime + '.jpg')
                         previous = current
                         delta = 0
-                        photolocation = 'photos/' + str(timetest) + '/' + str(currenttime) + '.jpg'
+                        photolocation = 'photos/' + str(testtime) + '/' + str(currenttime) + '.jpg'
                         newphoto = True
+        if manualphoto == True:
+            dataset = "photos"
+            currenttimeget = str(datetime.now())
+            currenttime = currenttimeget.replace(" ", "at")
+            ret, frame = video.read()
+            if not ret:
+                break
+            else:
+                resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+                cv2.imwrite(currenttime + '.jpg', resized_frame)
+                folder = '/home/nanolab/TC-HUNCH-Nanolab/webpages/photos/'
+                shutil.move(currenttime + '.jpg', folder + currenttime + '.jpg')
+                delta = 0
+                newphoto = True
+                photolocation = 'photos/' + str(currenttime) + '.jpg'
+            manualphoto = False
+
         if newphoto == True:
                 try:
                         with open(photolistlocation, 'r') as f:
@@ -174,6 +212,11 @@ def monitored_photos():
                              json.dump({dataset: [photolocation]}, f, indent = 4)
                         shutil.move('/home/nanolab/photolist.json', photolistlocation)
                 newphoto = False
+        if istest == 1:
+                timer = time.time()
+                if timer - reference == 5:
+                     istest = "0"
+
 @app.route('/photolist.json')
 def photo_json():
 	return send_from_directory("../webpages", "photolist.json")
