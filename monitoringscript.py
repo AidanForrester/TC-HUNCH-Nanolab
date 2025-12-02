@@ -46,7 +46,7 @@ pumppin = digitalio.DigitalInOut(board.GP1)
 ledpin = board.GP2
 pixelcount = 20
 bright = 0.3
-pixels = neopixel.Neopixel(ledpin, pixelcount, brightness=bright, auto_write=False)
+pixels = neopixel.NeoPixel(ledpin, pixelcount, brightness=bright, auto_write=False)
 
 @app.route('/sensor_data')
 def sensor_data():
@@ -133,7 +133,7 @@ photolistlocation = "TC-HUNCH-Nanolab/webpages/photos/photolist.json"
 testtime = None
 
 def monitored_photos():
-    global previous, delta, istests, testtime, startingphoto, photolistlocation
+    global previous, delta, istest, testtime, startingphoto, photolistlocation
     while True:
         if istest == "0":
                 current = time.time()
