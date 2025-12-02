@@ -36,6 +36,7 @@ body {
   font-size: 16px; /*  font size */
   font-weight: bold; /* Bold text  */
   cursor: pointer; /* shows interactable */
+  margin-bottom: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
   transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease; /*  hover effects */
 }
