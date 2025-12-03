@@ -11,10 +11,11 @@
 
 This will install the following dependencies:
 
-- Driver for Pi Camera
+- CV2 For Camera Functions
 - Adafruit Blinka Translation Layer for CircuitPython
-- CCS811 & BME280 CircuitPython Drivers for Enviornmental Combo
+- BME680 CircuitPython Drivers for Enviornmental Combo
 - Adafruit ADC Driver for Moisture Sensors
+- NeoPixel Library for LEDs
 - Flask Framework for Python to HTML Communication
 
 ## Usage Instructions
