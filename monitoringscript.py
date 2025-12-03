@@ -9,7 +9,7 @@ import os
 
 import time
 from datetime import datetime
-from flask import Flask, Response, jsonify, send_from_directory, request, render_template
+from flask import Flask, Response, jsonify, send_from_directory, request, render_template, redirect, url_for
 import threading
 import linecache
 import shutil
@@ -18,8 +18,8 @@ import json
 WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages")
 WEB_DIR = os.path.abspath(WEB_DIR)
 
-app = Flask(__name__)
-
+app = Flask(__name__, template_folder='../webpages')
+'''
 time.sleep(1)
 i2c_bus = board.I2C() ## Initialization of sensors
 bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c_bus, address=0x77)
@@ -36,18 +36,18 @@ m1 = AnalogIn(ads, ads1x15.Pin.A0)
 m2 = AnalogIn(ads, ads1x15.Pin.A1)
 tds = AnalogIn(ads, ads1x15.Pin.A2)
 ph = AnalogIn(ads, ads1x15.Pin.A3)
-
+'''
 maxm1 = 1.2558
 maxm2 = 1.7690
 minm1 = 0.16073
 minm2 = 0.62334
 
-pumppin = digitalio.DigitalInOut(board.GP1)
-ledpin = board.GP2
+pumppin = digitalio.DigitalInOut(board.D1)
+ledpin = board.D2
 pixelcount = 20
 bright = 0.3
 pixels = neopixel.NeoPixel(ledpin, pixelcount, brightness=bright, auto_write=False)
-
+'''
 @app.route('/sensor_data')
 def sensor_data():
     humidity = round(bme680.humidity, 1)
@@ -71,10 +71,11 @@ def sensor_data():
     tdsraw = ((tdsvolt / 2.3) * 1000)
     TDS = int(round(tdsraw, 0))
     return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TDS})
-
+'''
 video = cv2.VideoCapture(0)
 new_width = 640
 new_height = 480
+newestframe = None
 
 def video_stream():
     while(True):
@@ -84,6 +85,7 @@ def video_stream():
         else:
             resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
             ret, buffer = cv2.imencode('.jpg', resized_frame)
+            newestframe = ret, buffer
             frame_bytes = buffer.tobytes()
 
             yield (b'--frame\r\n'
@@ -97,7 +99,7 @@ def video_feed():
 @app.route('/<path:path>')
 def serve_page(path):
     return send_from_directory(WEB_DIR, path)
-
+'''
 @app.route('/settings_form', methods=['POST'])
 def settings_form():
     ambient_pressure = request.form['ap']
@@ -110,20 +112,38 @@ def settings_form():
         file.write(str(ambient_temp) + "\n")
         file.write(str(target_humidity) + "\n")
     return f"Preferences Set!"
+'''
+@app.route('/dashboard')
+def dashpage():
+     return render_template('index.html')
 
-@app.route('/controlbutton', methods=['GET', 'POST'])
+@app.route('/takephoto')
+def photopage():
+     return render_template('photos.html')
+
+@app.route('/graphpage')
+def graphpage():
+     return render_template('analytics.html')
+
+@app.route('/controlbutton', methods=['POST'])
 def controls():
-    if request.method == 'POST':
-        if 'growmode' in request.form:
-            growmode = True
-        elif 'viewmode' in request.form:
-            viewmode = True
-        elif 'manualphoto' in request.form:
-            manualphoto = True
-        elif 'starttest' in request.form:
-            istest = True,
-            reference = time.time()
-             
+     global growmode, viewmode, manualphoto, istest, reference
+     if 'growmode' in request.form:
+         growmode = True
+         returnpage = 'dashpage'
+     if 'viewmode' in request.form:
+         viewmode = True
+         returnpage = 'dashpage'
+     if 'manualphoto' in request.form:
+         manualphoto = True
+         returnpage = 'photopage'
+     if 'starttest' in request.form:
+         istest = "1"
+         reference = time.time()
+         returnpage = 'graphpage'
+     return redirect(url_for(returnpage))
+
+manualphoto = False
 previous = time.time()
 delta = 0
 istest = "0"
@@ -131,9 +151,10 @@ reference = 1
 startingphoto = True
 photolistlocation = "TC-HUNCH-Nanolab/webpages/photos/photolist.json"
 testtime = None
+olddelta = None
 
 def monitored_photos():
-    global previous, delta, istest, testtime, startingphoto, photolistlocation
+    global previous, delta, istest, testtime, startingphoto, photolistlocation, manualphoto, olddelta
     while True:
         if istest == "0":
                 current = time.time()
@@ -159,6 +180,9 @@ def monitored_photos():
                         photolocation = 'photos/' + str(currenttime) + '.jpg'
                         if testtime is not None:
                              testtime = None
+                if olddelta is not None:
+                        delta = olddelta
+                        olddelta = None
         if istest == "1":
                 if testtime is None:
                       testtime = datetime.now()
@@ -182,22 +206,9 @@ def monitored_photos():
                         photolocation = 'photos/' + str(testtime) + '/' + str(currenttime) + '.jpg'
                         newphoto = True
         if manualphoto == True:
-            dataset = "photos"
-            currenttimeget = str(datetime.now())
-            currenttime = currenttimeget.replace(" ", "at")
-            ret, frame = video.read()
-            if not ret:
-                break
-            else:
-                resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-                cv2.imwrite(currenttime + '.jpg', resized_frame)
-                folder = '/home/nanolab/TC-HUNCH-Nanolab/webpages/photos/'
-                shutil.move(currenttime + '.jpg', folder + currenttime + '.jpg')
-                delta = 0
-                newphoto = True
-                photolocation = 'photos/' + str(currenttime) + '.jpg'
+            olddelta = delta
+            startingphoto = True
             manualphoto = False
-
         if newphoto == True:
                 try:
                         with open(photolistlocation, 'r') as f:
@@ -226,19 +237,19 @@ def photos(filename):
 	return send_from_directory("../webpages/photos", filename)
 
 if __name__ == "__main__":
-        def background_sensor_task():
-           with app.app_context():
-            while True:
-                sensor_data()
-                time.sleep(2)
+    #    def background_sensor_task():
+     #      with app.app_context():
+      #      while True:
+        #        sensor_data()
+       #         time.sleep(2)
         def background_photo_task():
            with app.app_context():
             while True:
                 monitored_photos()
-        sensor_thread = threading.Thread(target=background_sensor_task)
+   #     sensor_thread = threading.Thread(target=background_sensor_task)
         photo_thread = threading.Thread(target=background_photo_task)
-        sensor_thread.daemon = True
+   #     sensor_thread.daemon = True
         photo_thread.daemon = True
-        sensor_thread.start()
+   #     sensor_thread.start()
         photo_thread.start()
         app.run(host="0.0.0.0", port=5000, debug=False)
