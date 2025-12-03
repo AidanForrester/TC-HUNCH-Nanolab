@@ -4,10 +4,11 @@
 
 1. Flash the Pi with a 64 bit Version of Raspberry Pi OS
 2. Clone the Repo using `git clone https://github.com/AidanForrester/TC-HUNCH-Nanolab.git/`
-3. Open the diretory using `cd TC-HUNCH-Nanolab`
-4. Designate the Dependency Installer an Executable `chmod +x InstallScript.sh`
-5. Run the Install Script `./InstallScript.sh`
-6. Enable I2C Through the PiConfig Menu
+3. Create a python virtual enviornment for the libraries `python3 -m venv --system-site-packages nanolabenvenv`
+4. Open the project using `cd TC-HUNCH-Nanolab`
+5. Designate the Dependency Installer an Executable `chmod +x InstallScript.sh`
+6. Run the Install Script `./InstallScript.sh`
+7. Enable I2C Through the PiConfig Menu
 
 This will install the following dependencies:
 
@@ -19,6 +20,5 @@ This will install the following dependencies:
 - Flask Framework for Python to HTML Communication
 
 ## Usage Instructions
-To make the program work, you must work in a python virtual enviornment by entering these lines:
-``python3 -m venv --system-site-packages nanolabenvenv``
+To make the program work, you must work in a python virtual enviornment:
 ``source nanolabenv/bin/activate``
