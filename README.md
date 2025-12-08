@@ -12,9 +12,9 @@
 
 This will install the following dependencies:
 
-- CV2 For Camera Functions
+- OpenCV For Camera Functions
 - Adafruit Blinka Translation Layer for CircuitPython
-- BME680 CircuitPython Drivers for Enviornmental Combo
+- BME680 CircuitPython Driver for Enviornmental Combo
 - Adafruit ADC Driver for Moisture Sensors
 - NeoPixel Library for LEDs
 - Flask Framework for Python to HTML Communication
