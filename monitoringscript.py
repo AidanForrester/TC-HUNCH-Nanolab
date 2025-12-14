@@ -1,3 +1,4 @@
+##Setup
 import adafruit_bme680
 from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
 import cv2
@@ -19,44 +20,63 @@ WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages"
 WEB_DIR = os.path.abspath(WEB_DIR)
 
 app = Flask(__name__, template_folder='../webpages')
-'''
+
 time.sleep(1)
 i2c_bus = board.I2C() ## Initialization of sensors
-bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c_bus, address=0x77)
+#bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c_bus, address=0x77)
 try:
      line = linecache.getline("config.txt", 1)
      ambient_pressure = line
 except Exception as e:
      ambient_pressure = 1013
      print("Please Configure Settings")
-bme680.seaLevelhPa = ambient_pressure
+#bme680.seaLevelhPa = ambient_pressure
+
+video = cv2.VideoCapture(0)
+new_width = 640
+new_height = 480
+newestframe = None
 
 ads = ADS1115(i2c_bus, address=0x48)
 m1 = AnalogIn(ads, ads1x15.Pin.A0)
 m2 = AnalogIn(ads, ads1x15.Pin.A1)
 tds = AnalogIn(ads, ads1x15.Pin.A2)
-ph = AnalogIn(ads, ads1x15.Pin.A3)
-'''
+pH = AnalogIn(ads, ads1x15.Pin.A3)
+
 maxm1 = 1.2558
 maxm2 = 1.7690
 minm1 = 0.16073
 minm2 = 0.62334
 
+manualphoto = False
+previous = time.time()
+delta = 0
+istest = "0"
+reference = 1
+startingphoto = True
+photolistlocation = "TC-HUNCH-Nanolab/webpages/photos/photolist.json"
+testtime = None
+olddelta = None
+newphoto = False
+
 pumppin = digitalio.DigitalInOut(board.D1)
-ledpin = board.D2
 pixelcount = 20
-bright = 0.3
-pixels = neopixel.NeoPixel(ledpin, pixelcount, brightness=bright, auto_write=False)
-'''
+bright = 0.1
+pixels = neopixel.NeoPixel(board.D18, pixelcount, brightness=bright, auto_write=False)
+
+pixels.fill((255, 200, 180))
+pixels.show()
+
+#Functions
 @app.route('/sensor_data')
 def sensor_data():
-    humidity = round(bme680.humidity, 1)
-    temperature = round(bme680.temperature, 1)
-    try:
-     voc = round(bme680.gas, 1) / 1000
-     lastvoc = voc
-    except Exception as e:
-     voc = lastvoc
+    #humidity = round(bme680.humidity, 1)
+    #temperature = round(bme680.temperature, 1)
+    #try:
+     #voc = round(bme680.gas, 1) / 1000
+     #lastvoc = voc
+    #except Exception as e:
+     #voc = lastvoc
     moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
     if moist1 >= 100:
         moist1 = 100
@@ -70,12 +90,9 @@ def sensor_data():
     tdsvolt = tds.voltage
     tdsraw = ((tdsvolt / 2.3) * 1000)
     TDS = int(round(tdsraw, 0))
-    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TDS})
-'''
-video = cv2.VideoCapture(0)
-new_width = 640
-new_height = 480
-newestframe = None
+    ph = pH.voltage
+    #return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TDS})
+    return jsonify({'moist1': moist1, 'moist2': moist2, 'tds': TDS, 'pH': ph})
 
 def video_stream():
     while(True):
@@ -99,7 +116,7 @@ def video_feed():
 @app.route('/<path:path>')
 def serve_page(path):
     return send_from_directory(WEB_DIR, path)
-'''
+
 @app.route('/settings_form', methods=['POST'])
 def settings_form():
     ambient_pressure = request.form['ap']
@@ -112,7 +129,7 @@ def settings_form():
         file.write(str(ambient_temp) + "\n")
         file.write(str(target_humidity) + "\n")
     return f"Preferences Set!"
-'''
+
 @app.route('/dashboard')
 def dashpage():
      return render_template('index.html')
@@ -129,10 +146,19 @@ def graphpage():
 def controls():
      global growmode, viewmode, manualphoto, istest, reference
      if 'growmode' in request.form:
-         growmode = True
+         pixels[1] = (255, 0, 0)
+         pixels[4] = (255, 0, 0)
+         pixels[7] = (255, 0, 0)
+
+         pixels[2] = (0, 0, 255)
+         pixels[8] = (0, 0, 255)
+         pixels[10] = (0, 0, 255)
+         pixels.show()
+
          returnpage = 'dashpage'
      if 'viewmode' in request.form:
-         viewmode = True
+         pixels.fill((255, 200, 180))
+         pixels.show()
          returnpage = 'dashpage'
      if 'manualphoto' in request.form:
          manualphoto = True
@@ -143,18 +169,8 @@ def controls():
          returnpage = 'graphpage'
      return redirect(url_for(returnpage))
 
-manualphoto = False
-previous = time.time()
-delta = 0
-istest = "0"
-reference = 1
-startingphoto = True
-photolistlocation = "TC-HUNCH-Nanolab/webpages/photos/photolist.json"
-testtime = None
-olddelta = None
-
 def monitored_photos():
-    global previous, delta, istest, testtime, startingphoto, photolistlocation, manualphoto, olddelta
+    global previous, delta, istest, testtime, startingphoto, photolistlocation, manualphoto, olddelta, newphoto
     while True:
         if istest == "0":
                 current = time.time()
@@ -236,20 +252,21 @@ def photo_json():
 def photos(filename):
 	return send_from_directory("../webpages/photos", filename)
 
+##Procedural
 if __name__ == "__main__":
-    #    def background_sensor_task():
-     #      with app.app_context():
-      #      while True:
-        #        sensor_data()
-       #         time.sleep(2)
+        def background_sensor_task():
+           with app.app_context():
+            while True:
+                sensor_data()
+                time.sleep(2)
         def background_photo_task():
            with app.app_context():
             while True:
                 monitored_photos()
-   #     sensor_thread = threading.Thread(target=background_sensor_task)
+        sensor_thread = threading.Thread(target=background_sensor_task)
         photo_thread = threading.Thread(target=background_photo_task)
-   #     sensor_thread.daemon = True
+        sensor_thread.daemon = True
         photo_thread.daemon = True
-   #     sensor_thread.start()
+        sensor_thread.start()
         photo_thread.start()
         app.run(host="0.0.0.0", port=5000, debug=False)
