@@ -22,3 +22,6 @@ This will install the following dependencies:
 ## Usage Instructions
 To make the program work, you must work in a python virtual enviornment:
 ``source nanolabenv/bin/activate``
+
+NeoPixels also need sudo permissions in order to run in CircuitPython, so to start the script, use the following command:
+``sudo /home/nanolab/nanolabenv/bin/python /home/nanolab/TC-HUNCH-Nanolab/tests/ms.py``
