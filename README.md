@@ -13,6 +13,7 @@
 This will install the following dependencies:
 
 - OpenCV For Camera Functions
+- ONNX Runtime for AI Vision Model
 - Adafruit Blinka Translation Layer for CircuitPython
 - BME680 CircuitPython Driver for Enviornmental Combo
 - Adafruit ADC Driver for Moisture Sensors
