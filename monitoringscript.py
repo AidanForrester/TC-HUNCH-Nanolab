@@ -58,6 +58,7 @@ photolistlocation = "TC-HUNCH-Nanolab/webpages/photos/photolist.json"
 testtime = None
 olddelta = None
 newphoto = False
+pump_constant = 1
 
 pumppin = digitalio.DigitalInOut(board.D1)
 pixelcount = 20
@@ -68,6 +69,20 @@ pixels.fill((255, 200, 180))
 pixels.show()
 
 #Functions
+def pump_cycle(modifyer):
+    global pump_constant
+    pump_previous = time.time()
+    if modifyer is None:
+        modifyer = 1
+    pump_time = pump_constant * modifyer
+    while True:
+        pumppin.value = True
+        current = time.time()
+        delta = current - pumpprevious
+        if delta == pump_time:
+            pumppin.value = False
+            return f"Pump Cycle Complete!" 
+    
 @app.route('/sensor_data')
 def sensor_data():
     #humidity = round(bme680.humidity, 1)
