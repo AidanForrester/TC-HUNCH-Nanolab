@@ -16,21 +16,27 @@ import linecache
 import shutil
 import json
 
-WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages")
-WEB_DIR = os.path.abspath(WEB_DIR)
-
 app = Flask(__name__, template_folder='../webpages')
 
 time.sleep(1)
 i2c_bus = board.I2C() ## Initialization of sensors
 #bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c_bus, address=0x77)
 try:
-     line = linecache.getline("config.txt", 1)
-     ambient_pressure = line
+     line1 = linecache.getline("config.txt", 1)
+     ambient_pressure = line1
 except Exception as e:
      ambient_pressure = 1013
      print("Please Configure Settings")
 #bme680.seaLevelhPa = ambient_pressure
+try:
+     line2 = linecache.getline("config.txt", 2)
+	 module_config = line2
+except Exception as e:
+     module_config = aeroponictest
+     print("Please Configure Settings")
+
+WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages/" + module_config)
+WEB_DIR = os.path.abspath(WEB_DIR)
 
 video = cv2.VideoCapture(0)
 new_width = 640
@@ -81,6 +87,7 @@ def pump_cycle(modifyer):
         delta = current - pumpprevious
         if delta == pump_time:
             pumppin.value = False
+			break
             return f"Pump Cycle Complete!" 
     
 @app.route('/sensor_data')
@@ -137,12 +144,10 @@ def settings_form():
     ambient_pressure = request.form['ap']
     bme680.seaLevelhPa = ambient_pressure
 
-    ambient_temp = request.form['at']
-    target_humidity = request.form['th']
+	module_config = request.form['mc']
     with open('config.txt', 'w') as file:
         file.write(str(ambient_pressure) + "\n")
-        file.write(str(ambient_temp) + "\n")
-        file.write(str(target_humidity) + "\n")
+        file.write(str(module_config) + "\n")
     return f"Preferences Set!"
 
 @app.route('/dashboard')
