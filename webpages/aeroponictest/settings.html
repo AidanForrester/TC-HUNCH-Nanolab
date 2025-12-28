@@ -115,14 +115,19 @@
 <main>
         <h1>Settings</h1>
         <form action="/settings_form" method="POST">
+             <label for="mode-select">Current Configuration:</label>
+             <select name="config" id="mode-select">
+             <option value="">--Please Select a Module--</option>
+                 <option value="aeroponicfull">Aeroponic Full Module</option>
+                 <option value="aeroponictest">Aeroponic 10mL Test Module</option>
+                 <option value="rockwollfull">Rockwoll Full Module</option>
+                 <option value="rockwolltest">Rockwoll 10mL Test Module</option>
+              </select>
+
+<h2></h2>
+
              <label for="ap">Ambient Pressure (hPa):</label>
              <input type="text" id="ap" name="ap">
-             <h3></h3>
-             <label for="at">Ambient Temperature (°C):</label>
-             <input type="text" id="at" name="at">
-             <h3></h3>
-             <label for="th">Target Humidity (See About) (XX.X%):</label>
-             <input type="text" id="th" name="th">
              <input type="submit" value="Set">
         </form>
 </main>
