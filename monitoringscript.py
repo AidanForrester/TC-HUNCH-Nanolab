@@ -74,7 +74,25 @@ pixels = neopixel.NeoPixel(board.D18, pixelcount, brightness=bright, auto_write=
 pixels.fill((255, 200, 180))
 pixels.show()
 
+avg_wet = 0
+
+proc = subprocess.Popen(
+    ["python3.11", "/home/nanolab/tflite311/root_ai.py"],
+    stdout=subprocess.PIPE,
+    text=True
+)
+
 #Functions
+def root_ai_read():
+    global avg_wet
+    line = proc.stdout.readline()
+    avg_wet = int(line.strip())
+
+@app.after_request
+def disable_cache(response):
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
 def pump_cycle(modifyer):
     global pump_constant
     pump_previous = time.time()
@@ -282,10 +300,13 @@ if __name__ == "__main__":
            with app.app_context():
             while True:
                 monitored_photos()
+        def root_ai_task():
+            while True:
+                read_root_ai()
         sensor_thread = threading.Thread(target=background_sensor_task)
         photo_thread = threading.Thread(target=background_photo_task)
-        sensor_thread.daemon = True
-        photo_thread.daemon = True
+        root_ai_thread = threading.Thread(target=root_ai_task)
         sensor_thread.start()
         photo_thread.start()
-        app.run(host="0.0.0.0", port=5000, debug=False)
+        root_ai_thread.start()
+        app.run(host="0.0.0.0", port=5000)
