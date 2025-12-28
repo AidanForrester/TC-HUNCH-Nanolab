@@ -2,6 +2,8 @@
 
 ## Instalation Instructions
 
+This modulle is mostly written in Python 3.13.15 and HTML/CSS, though the AI image model must run on Python 3.11.9 for compatibility withg the Tesorflow Lite framework. Before completing the following instructions, ensure both versions of python are on the Pi.
+
 1. Flash the Pi with a 64 bit Version of Raspberry Pi OS
 2. Clone the Repo using `git clone https://github.com/AidanForrester/TC-HUNCH-Nanolab.git/`
 3. Create a python virtual enviornment for the libraries `python3 -m venv --system-site-packages nanolabenvenv`
@@ -13,7 +15,6 @@
 This will install the following dependencies:
 
 - OpenCV For Camera Functions
-- ONNX Runtime for AI Vision Model
 - Adafruit Blinka Translation Layer for CircuitPython
 - BME680 CircuitPython Driver for Enviornmental Combo
 - Adafruit ADC Driver for Moisture Sensors
