@@ -16,7 +16,7 @@ import linecache
 import shutil
 import json
 
-app = Flask(__name__, template_folder='../webpages')
+app = Flask(__name__, template_folder='../webpages/' + module_config)
 
 time.sleep(1)
 i2c_bus = board.I2C() ## Initialization of sensors
@@ -60,7 +60,7 @@ delta = 0
 istest = "0"
 reference = 1
 startingphoto = True
-photolistlocation = "TC-HUNCH-Nanolab/webpages/photos/photolist.json"
+photolistlocation = "TC-HUNCH-Nanolab/webpages/" + module_config + "photos/photolist.json"
 testtime = None
 olddelta = None
 newphoto = False
@@ -140,11 +140,10 @@ def serve_page(path):
     return send_from_directory(WEB_DIR, path)
 
 @app.route('/settings_form', methods=['POST'])
-def settings_form():
+def settings form():
     ambient_pressure = request.form['ap']
     bme680.seaLevelhPa = ambient_pressure
-
-	module_config = request.form['mc']
+	module_config = request.form['config']
     with open('config.txt', 'w') as file:
         file.write(str(ambient_pressure) + "\n")
         file.write(str(module_config) + "\n")
@@ -208,7 +207,7 @@ def monitored_photos():
                     else:
                         resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
                         cv2.imwrite(currenttime + '.jpg', resized_frame)
-                        folder = '/home/nanolab/TC-HUNCH-Nanolab/webpages/photos/'
+                        folder = '/home/nanolab/TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/'
                         shutil.move(currenttime + '.jpg', folder + currenttime + '.jpg')
                         delta = 0
                         newphoto = True
@@ -222,7 +221,7 @@ def monitored_photos():
         if istest == "1":
                 if testtime is None:
                       testtime = datetime.now()
-                      folder2 = "/TC-HUNCH-Nanolab/webpages/photos/" + str(testtime)
+                      folder2 = "/TC-HUNCH-Nanolab/webpages" + module_config + "/photos/" + str(testtime)
                 dataset = "testphotos"
                 currenttimeget = str(datetime.now())
                 currenttime = currenttimeget.replace(" ", "at")
@@ -266,11 +265,11 @@ def monitored_photos():
 
 @app.route('/photolist.json')
 def photo_json():
-	return send_from_directory("../webpages", "photolist.json")
+	return send_from_directory("../webpages/" + module_config + "/photos/photolist.json")
 
 @app.route('/photos/<path:filename>')
 def photos(filename):
-	return send_from_directory("../webpages/photos", filename)
+	return send_from_directory("../webpages/" + module_config + "/photos", filename)
 
 ##Procedural
 if __name__ == "__main__":
