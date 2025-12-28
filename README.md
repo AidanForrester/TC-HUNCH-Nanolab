@@ -2,7 +2,7 @@
 
 ## Instalation Instructions
 
-This modulle is mostly written in Python 3.13.15 and HTML/CSS, though the AI image model must run on Python 3.11.9 for compatibility withg the Tesorflow Lite framework. Before completing the following instructions, ensure both versions of python are on the Pi.
+This module is mostly written in Python 3.13.15 and HTML/CSS, though the AI image model must run on Python 3.11.9 for compatibility withg the Tesorflow Lite framework. Before completing the following instructions, ensure both versions of python are on the Pi.
 
 1. Flash the Pi with a 64 bit Version of Raspberry Pi OS
 2. Clone the Repo using `git clone https://github.com/AidanForrester/TC-HUNCH-Nanolab.git/`
