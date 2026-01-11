@@ -1,0 +1,338 @@
+##Setup
+import adafruit_bme680
+from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
+import cv2
+import neopixel
+
+import digitalio
+import board
+import os
+
+import time
+from datetime import datetime
+from flask import Flask, Response, jsonify, send_from_directory, request, render_template, redirect, url_for
+import threading
+import linecache
+import shutil
+import json
+import subprocess
+import random
+
+time.sleep(1)
+i2c_bus = board.I2C() ## Initialization of sensors
+bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c_bus, address=0x77)
+try:
+     line1 = linecache.getline("/home/nanolab/config.txt", 1)
+     ambient_pressure = float(line1)
+except Exception as e:
+     ambient_pressure = 1013
+     print("Please Configure Settings")
+bme680.seaLevelhPa = ambient_pressure
+
+try:
+     line2 = linecache.getline("/home/nanolab/config.txt", 2)
+     module_config = str(line2)
+     module_config = module_config.replace("\n", "")
+except Exception as e:
+     module_config = "aeroponictest"
+     print("Please Configure Settings")
+
+app = Flask(__name__, template_folder='../webpages/' + module_config.strip())
+
+WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages/" + module_config.strip())
+WEB_DIR = os.path.abspath(WEB_DIR)
+
+video = cv2.VideoCapture(0)
+new_width = 640
+new_height = 480
+newestframe = None
+
+#ads = ADS1115(i2c_bus, address=0x48)
+#m1 = AnalogIn(ads, ads1x15.Pin.A0)
+#m2 = AnalogIn(ads, ads1x15.Pin.A1)
+#tds = AnalogIn(ads, ads1x15.Pin.A2)
+#pH = AnalogIn(ads, ads1x15.Pin.A3)
+
+maxm1 = 1.2558
+maxm2 = 1.7690
+minm1 = 0.16073
+minm2 = 0.62334
+
+manualphoto = False
+previous = time.time()
+delta = 0
+istest = "0"
+reference = 1
+startingphoto = True
+photolistlocation = "TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/photolist.json"
+testtime = None
+olddelta = None
+newphoto = False
+pump_constant = 1
+
+pumppin = digitalio.DigitalInOut(board.D1)
+pixelcount = 20
+bright = 0.1
+pixels = neopixel.NeoPixel(board.D18, pixelcount, brightness=bright, auto_write=False)
+
+pixels.fill((255, 200, 180))
+pixels.show()
+
+avg_wet = 0
+aiword = ""
+
+proc = subprocess.Popen(
+    [
+        "/home/nanolab/tflite311/bin/python",
+        "/home/nanolab/tflite311/root_ai.py",
+    ],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    text=True
+)
+#Functions
+def root_ai_read():
+    global avg_wet
+    line = proc.stdout.readline()
+    avg_wet = line
+    if avg_wet == '1':
+       avg_wet = 1
+    else:
+       avg_wet = 0
+    print_prob = random.randint(1, 7000)
+    if print_prob == 7:
+        print(avg_wet)
+
+@app.after_request
+def disable_cache(response):
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+def pump_cycle(modifyer):
+    global pump_constant
+    pump_previous = time.time()
+    if modifyer is None:
+        modifyer = 1
+    pump_time = pump_constant * modifyer
+    while True:
+        pumppin.value = True
+        current = time.time()
+        delta = current - pumpprevious
+        if delta == pump_time:
+            pumppin.value = False
+            break
+            return f"Pump Cycle Complete!"
+
+@app.route('/sensor_data')
+def sensor_data():
+    global aiword, avg_wet
+    humidity = round(bme680.humidity, 1)
+    temperature = round(bme680.temperature, 1)
+    try:
+     voc = round(bme680.gas, 1) / 1000
+     lastvoc = voc
+    except Exception as e:
+     voc = lastvoc
+    #moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
+    #if moist1 >= 100:
+        #moist1 = 100
+    #if moist1 <= 0:
+        #moist1 = 0
+    #moist2 = round(((m2.voltage - maxm2) / (minm2 - maxm2)) * 100, 0)
+    #if moist2 >= 100:
+        #moist2 = 100
+    #if moist2 <= 0:
+        #moist2 = 0
+    #tdsvolt = tds.voltage
+    #tdsraw = ((tdsvolt / 2.3) * 1000)
+    #TDS = int(round(tdsraw, 0))
+    #ph = pH.voltage
+    visionresult = avg_wet
+    if avg_wet == 0:
+       aiword = "Dry"
+    else:
+       aiword = "Wet"
+    #return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TDS})
+    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'AI': visionresult, 'aiword': aiword})
+    #return jsonify({'moist1': moist1, 'moist2': moist2, 'tds': TDS, 'pH': ph})
+
+def video_stream():
+    while(True):
+        ret, frame = video.read()
+        if not ret:
+            break
+        else:
+            resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+            ret, buffer = cv2.imencode('.jpg', resized_frame)
+            newestframe = ret, buffer
+            frame_bytes = buffer.tobytes()
+
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(video_stream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/', defaults={'path': 'index.html'})
+@app.route('/<path:path>')
+def serve_page(path):
+    return send_from_directory(WEB_DIR, path)
+
+@app.route('/settings_form', methods=['POST'])
+def settings_form():
+    ambient_pressure = request.form['ap']
+    bme680.seaLevelhPa = ambient_pressure
+    module_config = request.form['config']
+    with open('config.txt', 'w') as file:
+        file.write(str(ambient_pressure) + "\n")
+        file.write(str(module_config) + "\n")
+    return redirect(url_for('dashpage'))
+
+@app.route('/dashboard')
+def dashpage():
+     return render_template('index.html')
+
+@app.route('/takephoto')
+def photopage():
+     return render_template('photos.html')
+
+@app.route('/graphpage')
+def graphpage():
+     return render_template('analytics.html')
+
+@app.route('/controlbutton', methods=['POST'])
+def controls():
+     global growmode, viewmode, manualphoto, istest, reference
+     if 'growmode' in request.form:
+         pixels[1] = (255, 0, 0)
+         pixels[4] = (255, 0, 0)
+         pixels[7] = (255, 0, 0)
+
+         pixels[2] = (0, 0, 255)
+         pixels[8] = (0, 0, 255)
+         pixels[10] = (0, 0, 255)
+         pixels.show()
+
+         returnpage = 'dashpage'
+     if 'viewmode' in request.form:
+         pixels.fill((255, 200, 180))
+         pixels.show()
+         returnpage = 'dashpage'
+     if 'manualphoto' in request.form:
+         manualphoto = True
+         returnpage = 'photopage'
+     if 'starttest' in request.form:
+         istest = "1"
+         reference = time.time()
+         returnpage = 'graphpage'
+     if 'restart' in request.form:
+         python = sys.executable
+         os.execv(python, [python] + sys.argv)
+         returnpage = 'dashpage'
+     return redirect(url_for(returnpage))
+
+def monitored_photos():
+    global previous, delta, istest, testtime, startingphoto, photolistlocation, manualphoto, olddelta, newphoto
+    while True:
+        if istest == "0":
+                current = time.time()
+                delta = current - previous
+                if startingphoto == True:
+                     delta = 21600
+                     startingphoto = False
+                dataset = "photos"
+                currenttimeget = str(datetime.now())
+                currenttime = currenttimeget.replace(" ", "at")
+                if delta >= 21600:
+                    ret, frame = video.read()
+                    if not ret:
+                        break
+                    else:
+                        resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+                        cv2.imwrite(currenttime + '.jpg', resized_frame)
+                        folder = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/"
+                        shutil.move(currenttime + '.jpg', folder + currenttime + '.jpg')
+                        delta = 0
+                        newphoto = True
+                        previous = current
+                        photolocation = 'photos/' + str(currenttime) + '.jpg'
+                        if testtime is not None:
+                             testtime = None
+                if olddelta is not None:
+                        delta = olddelta
+                        olddelta = None
+        if istest == "1":
+                if testtime is None:
+                      testtime = datetime.now()
+                      folder2 = "/TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/" + str(testtime)
+                dataset = "testphotos"
+                currenttimeget = str(datetime.now())
+                currenttime = currenttimeget.replace(" ", "at")
+                current = time.time()
+                delta = current - previous
+
+                if delta >= 1:
+                    ret, frame = video.read()
+                    if not ret:
+                        break
+                    else:
+                        resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+                        cv2.imwrite(currenttime + '.jpg', resized_frame)
+                        shutil.move(currenttime + '.jpg', folder2 + currenttime + '.jpg')
+                        previous = current
+                        delta = 0
+                        photolocation = 'photos/' + str(testtime) + '/' + str(currenttime) + '.jpg'
+                        newphoto = True
+        if manualphoto == True:
+            olddelta = delta
+            startingphoto = True
+            manualphoto = False
+        if newphoto == True:
+                try:
+                        with open(photolistlocation, 'r') as f:
+                             data = json.load(f)
+                        if dataset not in data:
+                             data[dataset] = []
+                        data[dataset].append(photolocation)
+                        with open(photolistlocation, 'w') as f:
+                             json.dump(data, f, indent=4)
+                except FileNotFoundError:
+                        with open('photolist.json', 'w') as f:
+                             json.dump({dataset: [photolocation]}, f, indent = 4)
+                        shutil.move('/home/nanolab/photolist.json', photolistlocation)
+                newphoto = False
+        if istest == 1:
+                timer = time.time()
+                if timer - reference == 5:
+                     istest = "0"
+
+@app.route('/photolist.json')
+def photo_json():
+	return send_from_directory("../webpages/" + module_config + "/photos/photolist.json")
+
+@app.route('/photos/<path:filename>')
+def photos(filename):
+	return send_from_directory("../webpages/" + module_config + "/photos", filename)
+
+##Procedural
+if __name__ == "__main__":
+        def background_sensor_task():
+           with app.app_context():
+            while True:
+                sensor_data()
+                time.sleep(2)
+        def background_photo_task():
+           with app.app_context():
+            while True:
+                monitored_photos()
+        def root_ai_task():
+            while True:
+                root_ai_read()
+        sensor_thread = threading.Thread(target=background_sensor_task)
+        photo_thread = threading.Thread(target=background_photo_task)
+        root_ai_thread = threading.Thread(target=root_ai_task)
+        sensor_thread.start()
+        photo_thread.start()
+        root_ai_thread.start()
+        app.run(host="0.0.0.0", port=5000)
