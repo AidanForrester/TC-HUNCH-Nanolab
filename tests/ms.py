@@ -70,7 +70,8 @@ olddelta = None
 newphoto = False
 pump_constant = 1
 
-pumppin = digitalio.DigitalInOut(board.D1)
+pump_pin = digitalio.DigitalInOut(board.D21)
+pump_pin.direction = digitalio.Direction.OUTPUT
 pixelcount = 20
 bright = 0.1
 pixels = neopixel.NeoPixel(board.D18, pixelcount, brightness=bright, auto_write=False)
@@ -109,19 +110,22 @@ def disable_cache(response):
     return response
 
 def pump_cycle(modifyer):
-    global pump_constant
+    global pump_constant, pump_pin
     pump_previous = time.time()
     if modifyer is None:
         modifyer = 1
     pump_time = pump_constant * modifyer
     while True:
-        pumppin.value = True
+        pump_pin.value = True
         current = time.time()
-        delta = current - pumpprevious
+        delta = current - pump_previous
         if delta == pump_time:
-            pumppin.value = False
+            pump_pin.value = False
             break
             return f"Pump Cycle Complete!"
+
+def test_function():
+	pump_cycle()
 
 @app.route('/sensor_data')
 def sensor_data():
@@ -329,9 +333,14 @@ if __name__ == "__main__":
         def root_ai_task():
             while True:
                 root_ai_read()
+		def pump_task():
+			while istest == True:
+				pump_cycle()
         sensor_thread = threading.Thread(target=background_sensor_task)
         photo_thread = threading.Thread(target=background_photo_task)
         root_ai_thread = threading.Thread(target=root_ai_task)
+        pump_thread = threading.Thread(target=pump_task)
+		pump_thread.start()
         sensor_thread.start()
         photo_thread.start()
         root_ai_thread.start()
