@@ -68,7 +68,7 @@ photolistlocation = "TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/phot
 testtime = None
 olddelta = None
 newphoto = False
-pump_constant = 1
+pump_constant = 5
 
 pump_pin = digitalio.DigitalInOut(board.D21)
 pump_pin.direction = digitalio.Direction.OUTPUT
@@ -112,8 +112,6 @@ def disable_cache(response):
 def pump_cycle(modifyer):
     global pump_constant, pump_pin
     pump_previous = time.time()
-    if modifyer is None:
-        modifyer = 1
     pump_time = pump_constant * modifyer
     while True:
         pump_pin.value = True
@@ -228,7 +226,6 @@ def controls():
          returnpage = 'photopage'
      if 'starttest' in request.form:
          istest = "1"
-         reference = time.time()
          returnpage = 'graphpage'
      if 'restart' in request.form:
          python = sys.executable
@@ -325,7 +322,9 @@ if __name__ == "__main__":
            with app.app_context():
             while True:
                 sensor_data()
-                time.sleep(2)
+				time.sleep(2)
+				if istest == True:
+					pump_cycle()
         def background_photo_task():
            with app.app_context():
             while True:
@@ -333,14 +332,9 @@ if __name__ == "__main__":
         def root_ai_task():
             while True:
                 root_ai_read()
-		def pump_task():
-			while istest == True:
-				pump_cycle()
         sensor_thread = threading.Thread(target=background_sensor_task)
         photo_thread = threading.Thread(target=background_photo_task)
         root_ai_thread = threading.Thread(target=root_ai_task)
-        pump_thread = threading.Thread(target=pump_task)
-		pump_thread.start()
         sensor_thread.start()
         photo_thread.start()
         root_ai_thread.start()
