@@ -2,28 +2,25 @@
 
 ## Instalation Instructions
 
-This module is mostly written in Python 3.13.15 and HTML/CSS, though the AI image model must run on Python 3.11.9 for compatibility withg the Tesorflow Lite framework. Before completing the following instructions, ensure both versions of python are on the Pi.
+This module is written in Python 3.11.9 and HTML/CSS. The project must not use a new python version for compatibility with the Tesorflow Lite framework. Before completing the following instructions, ensure Python version 3.11.X is installed on the pi, even if a different version came with PI OS.
 
-1. Flash the Pi with a 64 bit Version of Raspberry Pi OS
-2. Clone the Repo using `git clone https://github.com/AidanForrester/TC-HUNCH-Nanolab.git/`
-3. Create a python virtual enviornment for the libraries `python3 -m venv --system-site-packages nanolabenvenv`
-4. Open the project using `cd TC-HUNCH-Nanolab`
-5. Designate the Dependency Installer an Executable `chmod +x InstallScript.sh`
-6. Run the Install Script `./InstallScript.sh`
-7. Enable I2C Through the PiConfig Menu
+1. Clone this Repo using `git clone https://github.com/AidanForrester/TC-HUNCH-Nanolab.git/`
+2. Open the project using `cd TC-HUNCH-Nanolab`
+3. Designate the Dependency Installer an Executable `chmod +x InstallScript.sh`
+4. Run the Install Script `./InstallScript.sh`
+5. Enable I2C Through the PiConfig Menu
 
 This will install the following dependencies:
 
 - OpenCV For Camera Functions
-- Adafruit Blinka Translation Layer for CircuitPython
+- Adafruit Blinka Translation Layer + RPi.GPIO for CircuitPython
 - BME680 CircuitPython Driver for Enviornmental Combo
 - Adafruit ADC Driver for Moisture Sensors
-- NeoPixel Library for LEDs
+- NeoPixel Library + RPi_WS281x for LEDs
 - Flask Framework for Python to HTML Communication
+- TF Lite Framework for AI Vision Model
 
 ## Usage Instructions
-To make the program work, you must work in a python virtual enviornment:
-``source nanolabenv/bin/activate``
 
-NeoPixels also need sudo permissions in order to run in CircuitPython, so to start the script, use the following command:
-``sudo /home/nanolab/nanolabenv/bin/python /home/nanolab/TC-HUNCH-Nanolab/tests/ms.py``
+NeoPixels need sudo permissions in order to run in CircuitPython, so to start the script, use the following command:
+``sudo /home/nanolab/labenv/bin/python /home/nanolab/TC-HUNCH-Nanolab/tests/ms.py``
