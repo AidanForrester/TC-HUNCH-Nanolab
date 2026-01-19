@@ -1,12 +1,12 @@
 ##Setup
-import adafruit_bme680
-from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
-import cv2
-import neopixel
-
 import digitalio
 import board
 import os
+import adafruit_bme680
+from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
+import cv2
+
+import neopixel
 
 import time
 from datetime import datetime
@@ -14,11 +14,23 @@ from flask import Flask, Response, jsonify, send_from_directory, request, render
 import threading
 import linecache
 import shutil
+import sys
 import json
-import subprocess
+
+from collections import deque
+from tflite_runtime.interpreter import Interpreter
+import numpy as np
 import random
 
-time.sleep(1)
+MODEL = "Root_Classification_Model.tflite"
+interpreter = Interpreter(model_path=MODEL)
+interpreter.allocate_tensors()
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+_, h, w, c = input_details[0]['shape']
+avg_window = 20
+predictions = deque(maxlen=avg_window)
+
 i2c_bus = board.I2C() ## Initialization of sensors
 bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c_bus, address=0x77)
 try:
@@ -43,6 +55,7 @@ WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages/
 WEB_DIR = os.path.abspath(WEB_DIR)
 
 video = cv2.VideoCapture(0)
+video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 new_width = 640
 new_height = 480
 newestframe = None
@@ -61,7 +74,7 @@ minm2 = 0.62334
 manualphoto = False
 previous = time.time()
 delta = 0
-istest = "0"
+istest = False
 reference = 1
 startingphoto = True
 photolistlocation = "TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/photolist.json"
@@ -69,9 +82,16 @@ testtime = None
 olddelta = None
 newphoto = False
 pump_constant = 5
+stopper = False
 
-pump_pin = digitalio.DigitalInOut(board.D21)
+pump_pin = digitalio.DigitalInOut(board.D16)
 pump_pin.direction = digitalio.Direction.OUTPUT
+pump_pin.value = False
+testcheck = ""
+testfirstrun = False
+testphotocount = 0
+pump_modifyer = 1
+
 pixelcount = 20
 bright = 0.1
 pixels = neopixel.NeoPixel(board.D18, pixelcount, brightness=bright, auto_write=False)
@@ -82,24 +102,33 @@ pixels.show()
 avg_wet = 0
 aiword = ""
 
-proc = subprocess.Popen(
-    [
-        "/home/nanolab/tflite311/bin/python",
-        "/home/nanolab/tflite311/root_ai.py",
-    ],
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    text=True
-)
 #Functions
+def obtain_frame():
+    ret, frame = video.read()
+    return frame
+newestframe = obtain_frame().copy()
+
 def root_ai_read():
     global avg_wet
-    line = proc.stdout.readline()
-    avg_wet = line
-    if avg_wet == '1':
-       avg_wet = 1
-    else:
-       avg_wet = 0
+    frame = newestframe.copy()
+    frame_proc = cv2.resize(frame, (w, h))
+    frame_proc = cv2.cvtColor(frame_proc, cv2.COLOR_BGR2GRAY)
+    frame_proc = frame_proc.astype(np.float32) / 255.0
+    frame_proc = np.expand_dims(frame_proc, axis=-1)  # channel dim
+    frame_proc = np.expand_dims(frame_proc, axis=0)   # batch dim
+
+    # Run TFLite inference
+    interpreter.set_tensor(input_details[0]['index'], frame_proc)
+    interpreter.invoke()
+    output = interpreter.get_tensor(output_details[0]['index'])[0][0]
+
+    # Convert to binary 0/1
+    wet = 1 if output > 0.5 else 0
+
+    # Add to deque and compute average
+    predictions.append(wet)
+    avg_wet = round(sum(predictions) / len(predictions))
+
     print_prob = random.randint(1, 7000)
     if print_prob == 7:
         print(avg_wet)
@@ -110,31 +139,36 @@ def disable_cache(response):
     return response
 
 def pump_cycle(modifyer):
-    global pump_constant, pump_pin
-    pump_previous = time.time()
+    global pump_constant, pump_pin, istest
     pump_time = pump_constant * modifyer
-    while True:
-        pump_pin.value = True
-        current = time.time()
-        delta = current - pump_previous
-        if delta == pump_time:
-            pump_pin.value = False
-            break
-            return f"Pump Cycle Complete!"
-
-def test_function():
-	pump_cycle()
+    current = time.time()
+    end = current + pump_time
+    pump_pin.value = True
+    #while time.time() < end:
+        #print("Pumping! Time left= " + str(end - time.time()))
+    pump_pin.value = False
 
 @app.route('/sensor_data')
 def sensor_data():
     global aiword, avg_wet
-    humidity = round(bme680.humidity, 1)
-    temperature = round(bme680.temperature, 1)
     try:
-     voc = round(bme680.gas, 1) / 1000
-     lastvoc = voc
+        humidity = round(bme680.humidity, 1)
+        lasthumid = humidity
     except Exception as e:
-     voc = lastvoc
+        if lasthumid is None:
+            humidity = 0
+        else:
+            humidity = lasthumid
+    try:
+        temperature = round(bme680.temperature, 1)
+        lasttemp = temperature
+    except Exception as e:
+        lasttemp = temperature
+    try:
+        voc = round(bme680.gas, 1) / 1000
+        lastvoc = voc
+    except Exception as e:
+        voc = lastvoc
     #moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
     #if moist1 >= 100:
         #moist1 = 100
@@ -150,7 +184,7 @@ def sensor_data():
     #TDS = int(round(tdsraw, 0))
     #ph = pH.voltage
     visionresult = avg_wet
-    if avg_wet == 0:
+    if avg_wet == 0 or avg_wet == "0":
        aiword = "Dry"
     else:
        aiword = "Wet"
@@ -159,14 +193,11 @@ def sensor_data():
     #return jsonify({'moist1': moist1, 'moist2': moist2, 'tds': TDS, 'pH': ph})
 
 def video_stream():
-    while(True):
-        ret, frame = video.read()
-        if not ret:
-            break
-        else:
+    global newestframe
+    while True:
+            frame = newestframe.copy()
             resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
             ret, buffer = cv2.imencode('.jpg', resized_frame)
-            newestframe = ret, buffer
             frame_bytes = buffer.tobytes()
 
             yield (b'--frame\r\n'
@@ -184,7 +215,7 @@ def serve_page(path):
 @app.route('/settings_form', methods=['POST'])
 def settings_form():
     ambient_pressure = request.form['ap']
-    bme680.seaLevelhPa = ambient_pressure
+    bme680.seaLevelhPa = float(ambient_pressure)
     module_config = request.form['config']
     with open('config.txt', 'w') as file:
         file.write(str(ambient_pressure) + "\n")
@@ -201,11 +232,11 @@ def photopage():
 
 @app.route('/graphpage')
 def graphpage():
-     return render_template('analytics.html')
+    return render_template('analytics.html')
 
 @app.route('/controlbutton', methods=['POST'])
 def controls():
-     global growmode, viewmode, manualphoto, istest, reference
+     global growmode, viewmode, manualphoto, istest, testcheck
      if 'growmode' in request.form:
          pixels[1] = (255, 0, 0)
          pixels[4] = (255, 0, 0)
@@ -225,18 +256,19 @@ def controls():
          manualphoto = True
          returnpage = 'photopage'
      if 'starttest' in request.form:
-         istest = "1"
+         istest = True
          returnpage = 'graphpage'
      if 'restart' in request.form:
          python = sys.executable
          os.execv(python, [python] + sys.argv)
          returnpage = 'dashpage'
+     testcheck = returnpage
      return redirect(url_for(returnpage))
 
 def monitored_photos():
-    global previous, delta, istest, testtime, startingphoto, photolistlocation, manualphoto, olddelta, newphoto
+    global previous, delta, istest, testtime, startingphoto, photolistlocation, manualphoto, olddelta, newphoto, newestframe, testfirstrun, stopper, testphotocount
     while True:
-        if istest == "0":
+        if istest == False:
                 current = time.time()
                 delta = current - previous
                 if startingphoto == True:
@@ -246,45 +278,58 @@ def monitored_photos():
                 currenttimeget = str(datetime.now())
                 currenttime = currenttimeget.replace(" ", "at")
                 if delta >= 21600:
-                    ret, frame = video.read()
-                    if not ret:
-                        break
-                    else:
-                        resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-                        cv2.imwrite(currenttime + '.jpg', resized_frame)
-                        folder = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/"
-                        shutil.move(currenttime + '.jpg', folder + currenttime + '.jpg')
-                        delta = 0
-                        newphoto = True
-                        previous = current
-                        photolocation = 'photos/' + str(currenttime) + '.jpg'
-                        if testtime is not None:
+                    if newestframe is None:
+                        time.sleep(0.01)
+                        continue
+                    frame = newestframe.copy()
+                    resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+                    cv2.imwrite(currenttime + '.jpg', resized_frame)
+                    folder = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/"
+                    shutil.move(currenttime + '.jpg', folder + currenttime + '.jpg')
+                    delta = 0
+                    newphoto = True
+                    previous = current
+                    photolocation = 'photos/' + str(currenttime) + '.jpg'
+                    if testtime is not None:
                              testtime = None
                 if olddelta is not None:
-                        delta = olddelta
-                        olddelta = None
-        if istest == "1":
-                if testtime is None:
-                      testtime = datetime.now()
-                      folder2 = "/TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/" + str(testtime)
-                dataset = "testphotos"
-                currenttimeget = str(datetime.now())
-                currenttime = currenttimeget.replace(" ", "at")
-                current = time.time()
-                delta = current - previous
-
-                if delta >= 1:
-                    ret, frame = video.read()
-                    if not ret:
-                        break
-                    else:
-                        resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-                        cv2.imwrite(currenttime + '.jpg', resized_frame)
-                        shutil.move(currenttime + '.jpg', folder2 + currenttime + '.jpg')
-                        previous = current
-                        delta = 0
-                        photolocation = 'photos/' + str(testtime) + '/' + str(currenttime) + '.jpg'
-                        newphoto = True
+                    delta = olddelta
+                    olddelta = None
+        if istest == True and stopper == False:
+            if testfirstrun == True:
+                olddelta = delta
+                delta = 0
+                stopper = False
+                previous = time.time()
+                testtime = str(datetime.now())
+                testtime = testtime.replace(" ", "at")
+                testfirstrun = False
+            folder2 = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + str(module_config) + "/photos/" + testtime
+            os.makedirs(folder2, exist_ok=True)
+            dataset = "testphotos"
+            current = time.time()
+            delta = current - previous
+            currenttimeget = str(datetime.now())
+            currenttime = currenttimeget.replace(" ", "at")
+            if delta >= 0.5:
+                if newestframe is None:
+                    time.sleep(0.01)
+                    continue
+                frame = newestframe.copy()
+                resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+                cv2.imwrite(currenttime + '.jpg', resized_frame)
+                folder = folder2
+                shutil.move(currenttime + '.jpg', folder + '/' + currenttime + '.jpg')
+                delta = 0
+                newphoto = True
+                previous = current
+                photolocation = 'photos/' + str(testtime) + '/' + str(currenttime) + '.jpg'
+                testphotocount = testphotocount + 1
+                print("Photos Taken! " + str(testphotocount))
+                if testphotocount == 10:
+                    stopper = True
+            if delta >= 5.18:
+                istest = False
         if manualphoto == True:
             olddelta = delta
             startingphoto = True
@@ -303,10 +348,6 @@ def monitored_photos():
                              json.dump({dataset: [photolocation]}, f, indent = 4)
                         shutil.move('/home/nanolab/photolist.json', photolistlocation)
                 newphoto = False
-        if istest == 1:
-                timer = time.time()
-                if timer - reference == 5:
-                     istest = "0"
 
 @app.route('/photolist.json')
 def photo_json():
@@ -322,20 +363,35 @@ if __name__ == "__main__":
            with app.app_context():
             while True:
                 sensor_data()
-				time.sleep(2)
-				if istest == True:
-					pump_cycle()
+                time.sleep(2)
         def background_photo_task():
            with app.app_context():
-            while True:
                 monitored_photos()
         def root_ai_task():
             while True:
                 root_ai_read()
+        def test_task():
+            global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime
+            while True:
+                if testcheck == "graphpage":
+                    testfirstrun = True
+                    pump_cycle(pump_modifyer)
+                    testcheck = ""
+                    testtime = None
+                    testphotocount = 0
+        def frame_task():
+            global newestframe
+            while True:
+                newestframe = obtain_frame()
+                time.sleep(0.02)
         sensor_thread = threading.Thread(target=background_sensor_task)
         photo_thread = threading.Thread(target=background_photo_task)
         root_ai_thread = threading.Thread(target=root_ai_task)
+        test_thread = threading.Thread(target=test_task)
+        frame_thread = threading.Thread(target=frame_task)
+        frame_thread.start()
         sensor_thread.start()
         photo_thread.start()
         root_ai_thread.start()
+        test_thread.start()
         app.run(host="0.0.0.0", port=5000)
