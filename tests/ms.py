@@ -16,6 +16,7 @@ import linecache
 import shutil
 import sys
 import json
+import subprocess
 
 from collections import deque
 from tflite_runtime.interpreter import Interpreter
@@ -49,6 +50,45 @@ except Exception as e:
      module_config = "aeroponictest"
      print("Please Configure Settings")
 
+try:
+     line3 = linecache.getline("/home/nanolab/config.txt", 3)
+     bright = float(line3.strip())
+
+except Exception as e:
+     bright = 0.1
+     print("Please Configure Settings")
+
+pixelcount = 20
+pixels = neopixel.NeoPixel(board.D18, pixelcount, brightness=bright, auto_write=False)
+
+pixels.fill((255, 200, 180))
+pixels.show()
+
+try:
+     line4 = linecache.getline("/home/nanolab/config.txt", 4)
+     testphotogap = float(line4.strip())
+
+except Exception as e:
+     testphotogap = 0.5
+     print("Please Configure Settings")
+
+try:
+     line5 = linecache.getline("/home/nanolab/config.txt", 5)
+     requestedphotocount = float(line5.strip())
+
+except Exception as e:
+     requestedphotocount = 10
+     print("Please Configure Settings")
+
+try:
+     line6 = linecache.getline("/home/nanolab/config.txt", 6)
+     monitortime = float(line6.strip())
+     monitortime = ((monitortime * 60) * 60)
+
+except Exception as e:
+     monitortime = 21600
+     print("Please Configure Settings")
+
 app = Flask(__name__, template_folder='../webpages/' + module_config.strip())
 
 WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages/" + module_config.strip())
@@ -71,6 +111,7 @@ maxm2 = 1.7690
 minm1 = 0.16073
 minm2 = 0.62334
 
+RESTART = False
 manualphoto = False
 previous = time.time()
 delta = 0
@@ -81,10 +122,10 @@ photolistlocation = "TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/phot
 testtime = None
 olddelta = None
 newphoto = False
-pump_constant = 5
+pump_constant = 5.18
 stopper = False
 
-pump_pin = digitalio.DigitalInOut(board.D16)
+pump_pin = digitalio.DigitalInOut(board.D20)
 pump_pin.direction = digitalio.Direction.OUTPUT
 pump_pin.value = False
 testcheck = ""
@@ -92,24 +133,23 @@ testfirstrun = False
 testphotocount = 0
 pump_modifyer = 1
 
-pixelcount = 20
-bright = 0.1
-pixels = neopixel.NeoPixel(board.D18, pixelcount, brightness=bright, auto_write=False)
-
-pixels.fill((255, 200, 180))
-pixels.show()
-
 avg_wet = 0
 aiword = ""
 
 #Functions
 def obtain_frame():
     ret, frame = video.read()
-    return frame
-newestframe = obtain_frame().copy()
+    if frame is None or ret is False:
+        time.sleep(0.1)
+    else:
+        return frame
 
 def root_ai_read():
     global avg_wet
+    
+    if newestframe is None:
+        return
+    
     frame = newestframe.copy()
     frame_proc = cv2.resize(frame, (w, h))
     frame_proc = cv2.cvtColor(frame_proc, cv2.COLOR_BGR2GRAY)
@@ -144,8 +184,9 @@ def pump_cycle(modifyer):
     current = time.time()
     end = current + pump_time
     pump_pin.value = True
-    #while time.time() < end:
-        #print("Pumping! Time left= " + str(end - time.time()))
+    while time.time() <= end:
+        print("Pumping! Time left= " + str(end - time.time()))
+        time.sleep(0.25)
     pump_pin.value = False
 
 @app.route('/sensor_data')
@@ -217,9 +258,17 @@ def settings_form():
     ambient_pressure = request.form['ap']
     bme680.seaLevelhPa = float(ambient_pressure)
     module_config = request.form['config']
+    bright = request.form['npb']
+    testphotogap = request.form['ps']
+    requestedphotocount = request.form['ppt']
+    monitortime = request.form['pf']
     with open('config.txt', 'w') as file:
         file.write(str(ambient_pressure) + "\n")
         file.write(str(module_config) + "\n")
+        file.write(str(bright) + "\n")
+        file.write(str(testphotogap) + "\n")
+        file.write(str(requestedphotocount) + "\n")
+        file.write(str(monitortime) + "\n")
     return redirect(url_for('dashpage'))
 
 @app.route('/dashboard')
@@ -236,7 +285,7 @@ def graphpage():
 
 @app.route('/controlbutton', methods=['POST'])
 def controls():
-     global growmode, viewmode, manualphoto, istest, testcheck
+     global growmode, viewmode, manualphoto, istest, testcheck, RESTART
      if 'growmode' in request.form:
          pixels[1] = (255, 0, 0)
          pixels[4] = (255, 0, 0)
@@ -259,25 +308,32 @@ def controls():
          istest = True
          returnpage = 'graphpage'
      if 'restart' in request.form:
-         python = sys.executable
-         os.execv(python, [python] + sys.argv)
-         returnpage = 'dashpage'
+         RESTART = True
+         video.release()
+         subprocess.Popen(
+             [sys.executable] + sys.argv,
+             cwd=os.getcwd(),
+             env=os.environ.copy(),
+             stdout=sys.stdout,
+             stderr=sys.stderr
+         ) 
+         os._exit(0)
      testcheck = returnpage
      return redirect(url_for(returnpage))
 
 def monitored_photos():
-    global previous, delta, istest, testtime, startingphoto, photolistlocation, manualphoto, olddelta, newphoto, newestframe, testfirstrun, stopper, testphotocount
+    global previous, delta, istest, testtime, startingphoto, photolistlocation, manualphoto, olddelta, newphoto, newestframe, testfirstrun, stopper, testphotocount, testphotogap, monitortime, requestedphotocount
     while True:
         if istest == False:
                 current = time.time()
                 delta = current - previous
                 if startingphoto == True:
-                     delta = 21600
+                     delta = monitortime
                      startingphoto = False
                 dataset = "photos"
                 currenttimeget = str(datetime.now())
                 currenttime = currenttimeget.replace(" ", "at")
-                if delta >= 21600:
+                if delta >= monitortime:
                     if newestframe is None:
                         time.sleep(0.01)
                         continue
@@ -311,7 +367,7 @@ def monitored_photos():
             delta = current - previous
             currenttimeget = str(datetime.now())
             currenttime = currenttimeget.replace(" ", "at")
-            if delta >= 0.5:
+            if delta >= testphotogap:
                 if newestframe is None:
                     time.sleep(0.01)
                     continue
@@ -326,7 +382,7 @@ def monitored_photos():
                 photolocation = 'photos/' + str(testtime) + '/' + str(currenttime) + '.jpg'
                 testphotocount = testphotocount + 1
                 print("Photos Taken! " + str(testphotocount))
-                if testphotocount == 10:
+                if testphotocount == requestedphotocount:
                     stopper = True
             if delta >= 5.18:
                 istest = False
@@ -369,7 +425,8 @@ if __name__ == "__main__":
                 monitored_photos()
         def root_ai_task():
             while True:
-                root_ai_read()
+                if RESTART is not True:
+                    root_ai_read()
         def test_task():
             global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime
             while True:
@@ -382,8 +439,13 @@ if __name__ == "__main__":
         def frame_task():
             global newestframe
             while True:
-                newestframe = obtain_frame()
-                time.sleep(0.02)
+                if RESTART == True:
+                    return None
+                frame = obtain_frame()
+                if frame is not None:
+                    newestframe = frame
+                else:
+                    time.sleep(0.02)
         sensor_thread = threading.Thread(target=background_sensor_task)
         photo_thread = threading.Thread(target=background_photo_task)
         root_ai_thread = threading.Thread(target=root_ai_task)
@@ -394,4 +456,4 @@ if __name__ == "__main__":
         photo_thread.start()
         root_ai_thread.start()
         test_thread.start()
-        app.run(host="0.0.0.0", port=5000)
+        app.run(host="0.0.0.0", port=5000, use_reloader=False, threaded=True)
