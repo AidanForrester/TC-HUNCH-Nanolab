@@ -105,10 +105,12 @@ nav li:first-child {
   width: 250px;                                      /* Sidebar width */
   
   /* Glass-like style */
-  background-color: rgba(255, 255, 255, 0.849);      /* Semi-transparent white background */
+  background-color: rgb(255, 255, 255);      /* Semi-transparent white background (Disabled Currently) */
   backdrop-filter: blur(12px);                       /* Blurred glass effect */
   
   box-shadow: -10px 0 10px rgba(0, 0, 0, 0.432);       /* Shadow to separate from page */
+  
+  font-weight: bold ;
   
   list-style: none;                                  /* No bullets */
   display: none;                                     /* Hidden by default (shown via JS) */
