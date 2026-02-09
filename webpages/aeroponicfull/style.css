@@ -81,7 +81,8 @@ nav a {
   text-decoration: none;                             /* Remove underlines */
   display: flex;                                     /* Allows vertical centering */
   align-items: center;                               /* Centers link text vertically */
-  color: black;                                      /* Link text color */
+  color: black;    
+  font-weight: bold;                                  /* Link text color */
 }
 
 /* Hover effect for links */
