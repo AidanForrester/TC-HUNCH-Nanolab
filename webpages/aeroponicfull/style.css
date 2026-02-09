@@ -312,3 +312,19 @@ data {
     font-size: 28px;
   }
 }
+
+
+/*Controls Explanation Styling*/
+.controls-center {
+  text-align: center;
+}
+
+.simple-description {
+  margin-top: 25px;
+  background: rgba(255, 255, 255, 0.267);
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
