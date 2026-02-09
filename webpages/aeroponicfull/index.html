@@ -93,20 +93,61 @@
   </nav>
 
 <main>
-    <h1>Dashboard</h1> <!--Main Header-->
-    <h2>Current Sensor Values</h2> <!-- Sub Header -->
+<h2>Current Sensor Values</h2>
 
-    <h3>&#8203;</h3> <!-- Transparent Line Break -->
-    <data style="color: white;">Humidity: <span id="humidity">--</span>%</data>     <!--Fetches humidity-->
-    <data style="color:white">Temperature: <span id="temp">--</span>°C</data>   <!--Fetches temp Variable-->
-    <data style="color: white;">VOC: <span id="VOC">--</span> kΩ</data>
-    <data style="color:white">Total Dissolved Solids: <span id="tds">--</span> ppm</data>
-    <data style="color:white">pH: <span id="pH">--</span></data>
+<div class="sensorgrid">
 
-    <h3>&#8203;</h3>
-    <data style="color: white;">AI Root Detection: <span id="aiword">--</span></data>  
-    <data style="color:white">Upper-Dome Moisture Sensor: <span id="moist1">--</span>%</data>
-    <h3>&#8203;</h3>
+  <div class="sensorcard">
+    <span class="sensorlabel">Humidity</span>
+    <span class="sensorvalue">
+      <span id="humidity">--</span>%
+    </span>
+  </div>
+
+  <div class="sensorcard">
+    <span class="sensorlabel">Temperature</span>
+    <span class="sensorvalue">
+      <span id="temp">--</span>°C
+    </span>
+  </div>
+
+  <div class="sensorcard">
+    <span class="sensorlabel">VOC</span>
+    <span class="sensorvalue">
+      <span id="VOC">--</span> kΩ
+    </span>
+  </div>
+
+  <div class="sensorcard">
+    <span class="sensorlabel">Total Dissolved Solids</span>
+    <span class="sensorvalue">
+      <span id="tds">--</span> ppm
+    </span>
+  </div>
+
+  <div class="sensorcard">
+    <span class="sensorlabel">pH Level</span>
+    <span class="sensorvalue">
+      <span id="pH">--</span>
+    </span>
+  </div>
+
+  <div class="sensorcard">
+    <span class="sensorlabel">AI Root Detection</span>
+    <span class="sensorvalue">
+      <span id="aiword">--</span>
+    </span>
+  </div>
+
+  <div class="sensorcard">
+    <span class="sensorlabel">Upper Dome Moisture</span>
+    <span class="sensorvalue">
+      <span id="moist1">--</span>%
+    </span>
+  </div>
+
+</div>
+
 
     <h2>Live Camera View</h2> <!-- Sub Header -->
 <img id="bg" src="/video_feed" class="PhotoStyle1">
