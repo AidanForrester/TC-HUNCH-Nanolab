@@ -141,7 +141,7 @@ nav li:first-child {
    RESPONSIVE DESIGN
 =========================== */
 
-/* For smaller screens (below 1320px wide) */
+/* For smaller screens (below 1000px wide) */
 @media (max-width: 1000px) {
   .hideOnMobile {
     display: none;                                   /* Hide normal nav links */
