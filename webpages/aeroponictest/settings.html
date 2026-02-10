@@ -116,7 +116,7 @@
     <!-- ===========================
        SETTINGS PAGE
        =========================== -->
-  <h1>Settings</h1>
+  <h1 class="toptext">Settings</h1>
 
   <!-- ===========================
        SETTINGS CARD
@@ -125,9 +125,10 @@
 
     <form action="/settings_form" method="POST">
 
-      <!-- Configuration - Notes: Aidan Needs to explain if there are other options that need to be selectable -->
+      <!-- Configuration - Notes: If you Add more, Make sure they all follow the settings-group Class -->
       <div class="settings-group">
-        <label for="mode-select">Current Configuration</label>
+        
+        <strong class="strong1">What These Controls Do:</strong>
         <select name="config" id="mode-select">
           <option value="">-- Please Select a Module --</option>
           <option value="aeroponicfull">Aeroponic Full Module</option>

@@ -421,7 +421,10 @@ data {
   border: 1px solid #ccc;
   font-size: 15px;
 }
-
+input::placeholder {
+  /* Center the text horizontally within the available placeholder space */
+  text-align: center; 
+}
 /* Focus state */
 .settings-group input:focus,
 .settings-group select:focus {
@@ -445,6 +448,10 @@ data {
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.25s ease, transform 0.2s ease;
+}
+select, label {
+    text-align: center;
+    text-align-last: center; /* Ensures the selected option is also centered in some browsers */
 }
 
 .settings-actions input[type="submit"]:hover {
