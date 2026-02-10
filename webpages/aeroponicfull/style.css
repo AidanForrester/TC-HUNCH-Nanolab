@@ -386,3 +386,67 @@ data {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
+/* ===========================
+   SETTINGS PAGE STYLING
+=========================== */
+
+.settings-card {
+  max-width: 600px;
+  margin: 30px auto;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Group spacing */
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+/* Labels */
+.settings-group label {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+/* Inputs & Select */
+.settings-group input,
+.settings-group select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+}
+
+/* Focus state */
+.settings-group input:focus,
+.settings-group select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+/* Submit button */
+.settings-actions {
+  text-align: right;
+}
+
+.settings-actions input[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.2s ease;
+}
+
+.settings-actions input[type="submit"]:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}

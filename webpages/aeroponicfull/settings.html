@@ -113,24 +113,45 @@
   </script>
 </body>
 <main>
-        <h1>Settings</h1>
-        <form action="/settings_form" method="POST">
-             <label for="mode-select">Current Configuration:</label>
-             <select name="config" id="mode-select">
-             <option value="">--Please Select a Module--</option>
-                 <option value="aeroponicfull">Aeroponic Full Module</option>
-                 <option value="aeroponictest">Aeroponic 10mL Test Module</option>
-                 <option value="rockwollfull">Rockwoll Full Module</option>
-                 <option value="rockwolltest">Rockwoll 10mL Test Module</option>
-              </select>
+  <!-- ===========================
+       SETTINGS PAGE
+       =========================== -->
+  <h1>Settings</h1>
 
-<h2></h2>
+  <!-- ===========================
+       SETTINGS CARD
+       =========================== -->
+  <div class="settings-card">
 
-             <label for="ap">Ambient Pressure (hPa):</label>
-             <input type="text" id="ap" name="ap">
-             <input type="submit" value="Set">
-        </form>
+    <form action="/settings_form" method="POST">
+
+      <!-- Configuration Selector -->
+      <div class="settings-group">
+        <label for="mode-select">Current Configuration</label>
+        <select name="config" id="mode-select">
+          <option value="">-- Please Select a Module --</option>
+          <option value="aeroponicfull">Aeroponic Full Module</option>
+          <option value="aeroponictest">Aeroponic 10mL Test Module</option>
+          <option value="rockwollfull">Rockwoll Full Module</option>
+          <option value="rockwolltest">Rockwoll 10mL Test Module</option>
+        </select>
+      </div>
+
+      <!-- Ambient Pressure Input -->
+      <div class="settings-group">
+        <label for="ap">Ambient Pressure (hPa)</label>
+        <input type="text" id="ap" name="ap" placeholder="example: idk">
+      </div>
+
+      <!-- Submit Button -->
+      <div class="settings-actions">
+        <input type="submit" value="Apply Settings">
+      </div>
+
+    </form>
+  </div>
 </main>
+
 </html>
 
 
