@@ -13,11 +13,11 @@ body {
   min-height: 100vh;   /* Ensures body fills at least the full viewport height */
   
   /* Background image setup */
-  background: url('images/nasarocket.jpg'); /* Sets NASA rocket image as background */
+  background: url('images/hexagonbackground.jpg'); /* Sets NASA rocket image as background */
   background-size: cover;       /* Scales the image to cover entire background */
   background-repeat: no-repeat; /* Prevents image tiling */
   background-position: center;  /* Centers the image on the page */
-
+  
   /* Font styling */
   font-family: Arial, sans-serif, 'Times New Roman', Times, serif;
 }
@@ -259,6 +259,7 @@ data {
 
 .sensorgrid {
   display: grid;
+  
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
   margin-top: 25px;
