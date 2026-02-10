@@ -450,3 +450,15 @@ data {
   background-color: #0056b3;
   transform: translateY(-1px);
 }
+.strong1 {
+  font-size: 24px;
+  text-align: center;
+  display: block;
+  margin-bottom: 15px;
+}
+.toptext {
+  font-size: 50px;
+  text-align: center;
+  display: block;
+  margin-bottom: 15px;
+}
