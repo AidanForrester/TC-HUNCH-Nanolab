@@ -328,3 +328,61 @@ data {
   margin-left: auto;
   margin-right: auto;
 }
+/* ===========================
+   CONTROLS PAGE LAYOUT
+=========================== */
+
+.controls-layout {
+  display: flex;
+  gap: 30px;
+  margin-top: 30px;
+  align-items: flex-start;
+}
+
+/* Left side (2/3 width) */
+.controls-info {
+  flex: 2;
+}
+
+.controls-info h2 {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.controls-info p {
+  text-align: left;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* Right side (1/3 width) */
+.controls-buttons {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Buttons fill the column */
+.controls-buttons .button1 {
+  width: 100%;
+}
+
+/* Responsive stacking */
+@media (max-width: 800px) {
+  .controls-layout {
+    flex-direction: column;
+  }
+}
+/* ===========================
+   CONTROLS SECTION SEPARATION
+=========================== */
+
+/* Shared card styling for both sides */
+.controls-info {
+  background: rgba(255, 255, 255, 0.95); /* White with slight transparency */
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
