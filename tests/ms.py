@@ -100,16 +100,13 @@ new_width = 640
 new_height = 480
 newestframe = None
 
-#ads = ADS1115(i2c_bus, address=0x48)
-#m1 = AnalogIn(ads, ads1x15.Pin.A0)
-#m2 = AnalogIn(ads, ads1x15.Pin.A1)
-#tds = AnalogIn(ads, ads1x15.Pin.A2)
-#pH = AnalogIn(ads, ads1x15.Pin.A3)
+ads = ADS1115(i2c_bus, address=0x48)
+m1 = AnalogIn(ads, ads1x15.Pin.A0)
+tds = AnalogIn(ads, ads1x15.Pin.A2)
+pH = AnalogIn(ads, ads1x15.Pin.A3)
 
 maxm1 = 1.2558
-maxm2 = 1.7690
 minm1 = 0.16073
-minm2 = 0.62334
 
 manualphoto = False
 previous = time.time()
@@ -209,27 +206,22 @@ def sensor_data():
         lastvoc = voc
     except Exception as e:
         voc = lastvoc
-    #moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
-    #if moist1 >= 100:
-        #moist1 = 100
-    #if moist1 <= 0:
-        #moist1 = 0
-    #moist2 = round(((m2.voltage - maxm2) / (minm2 - maxm2)) * 100, 0)
-    #if moist2 >= 100:
-        #moist2 = 100
-    #if moist2 <= 0:
-        #moist2 = 0
-    #tdsvolt = tds.voltage
-    #tdsraw = ((tdsvolt / 2.3) * 1000)
-    #TDS = int(round(tdsraw, 0))
-    #ph = pH.voltage
+    moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
+    if moist1 >= 100:
+        moist1 = 100
+    if moist1 <= 0:
+        moist1 = 0
+    tdsvolt = tds.voltage
+    tdsraw = ((tdsvolt / 2.3) * 1000)
+    TDS = int(round(tdsraw, 0))
+    ph = pH.voltage
     visionresult = avg_wet
     if avg_wet == 0 or avg_wet == "0":
        aiword = "Dry"
     else:
        aiword = "Wet"
-    #return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'moist1': moist1, 'moist2': moist2, 'tds': TDS})
-    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'AI': visionresult, 'aiword': aiword})
+    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'AI': visionresult, 'aiword': aiword, 'moist1': moist1, 'pH': ph, 'tds': TDS})
+    #return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'AI': visionresult, 'aiword': aiword})
     #return jsonify({'moist1': moist1, 'moist2': moist2, 'tds': TDS, 'pH': ph})
 
 def video_stream():

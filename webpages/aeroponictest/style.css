@@ -362,11 +362,7 @@ data {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-/* Buttons fill the column */
-.controls-buttons .button1 {
-  width: 100%;
+  align-items: center;
 }
 
 /* Responsive stacking */
