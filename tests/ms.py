@@ -111,7 +111,6 @@ maxm2 = 1.7690
 minm1 = 0.16073
 minm2 = 0.62334
 
-RESTART = False
 manualphoto = False
 previous = time.time()
 delta = 0
@@ -285,7 +284,7 @@ def graphpage():
 
 @app.route('/controlbutton', methods=['POST'])
 def controls():
-     global growmode, viewmode, manualphoto, istest, testcheck, RESTART
+     global growmode, viewmode, manualphoto, istest, testcheck
      if 'growmode' in request.form:
          pixels[1] = (255, 0, 0)
          pixels[4] = (255, 0, 0)
@@ -307,17 +306,6 @@ def controls():
      if 'starttest' in request.form:
          istest = True
          returnpage = 'graphpage'
-     if 'restart' in request.form:
-         RESTART = True
-         video.release()
-         subprocess.Popen(
-             [sys.executable] + sys.argv,
-             cwd=os.getcwd(),
-             env=os.environ.copy(),
-             stdout=sys.stdout,
-             stderr=sys.stderr
-         ) 
-         os._exit(0)
      testcheck = returnpage
      return redirect(url_for(returnpage))
 
@@ -425,8 +413,7 @@ if __name__ == "__main__":
                 monitored_photos()
         def root_ai_task():
             while True:
-                if RESTART is not True:
-                    root_ai_read()
+                root_ai_read()
         def test_task():
             global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime
             while True:
@@ -439,8 +426,6 @@ if __name__ == "__main__":
         def frame_task():
             global newestframe
             while True:
-                if RESTART == True:
-                    return None
                 frame = obtain_frame()
                 if frame is not None:
                     newestframe = frame
