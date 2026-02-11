@@ -95,6 +95,24 @@ nav li:first-child {
   margin-right: auto;                                /* Pushes all other items to right */
 }
 
+/* Logo and brand name container */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;                                         /* Space between logo and text */
+}
+
+.logo-container img {
+  height: 35px;                                      /* Logo height */
+  width: auto;                                       /* Maintain aspect ratio */
+}
+
+.logo-container span {
+  font-weight: 600;                                  /* Semi-bold text */
+  font-size: 16px;                                   /* Text size */
+  color: black;
+}
+
 /* ===========================
    SIDEBAR (MOBILE NAV)
 =========================== */
