@@ -1,0 +1,506 @@
+
+<!DOCTYPE html>
+
+<!--Language-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics</title>
+<!--Favicon -->
+  <link rel="icon" type="X" href="/home/nanolab/TC-HUNCH-Nanolab/webpages/aeroponictest/images/Tri-CountyLogo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- NAVIGATION BAR -->
+  <nav>
+    <ul class="sidebar">
+      <li onclick="hideSidebar()"><a href="#">
+        <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 96 960 960">
+          <path d="m249 849-42-42 231-231-231-231 42-42 
+                   231 231 231-231 42 42-231 231 
+                   231 231-42 42-231-231-231 231Z"/>
+        </svg></a>
+      </li>
+
+      <!-- Vertical list of navigation links (stacked in a column via flex-direction: column) -->
+      <!-- These replicate the main navbar links but are shown in the sidebar on mobile -->
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="analytics.html">Analytics</a></li>
+      <li><a href="photos.html">Photos</a></li>
+      <li><a href="controls.html">Controls</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+
+    </ul>
+
+    <!-- ===========================
+         MAIN NAVBAR (DESKTOP VIEW)
+         =========================== -->
+    <!-- This <ul> is always visible on desktop screens.
+         On smaller screens (<1320px), CSS hides most links
+         and shows only the hamburger button. -->
+    <ul>
+      <!-- Project name (aligned left via nav li:first-child { margin-right:auto; }) -->
+      <li><a href="index.html" class="logo-container"><img src="images/darklogo.png" alt="HexaFlow Logo"><span>HexaFlow UI</span></a></li> <!--Top Left Name-->
+
+      <!-- Standard navigation links.
+           These are visible on desktop but hidden on smaller screens (CSS: .hideOnMobile {display:none}) -->
+      <li class="hideOnMobile"><a href="index.html">Dashboard</a></li>
+      <li class="hideOnMobile"><a href="analytics.html">Analytics</a></li>
+      <li class="hideOnMobile"><a href="photos.html">Photos</a></li>
+      <li class="hideOnMobile"><a href="controls.html">Controls</a></li>
+      <li class="hideOnMobile"><a href="settings.html">Settings</a></li>
+      <li class="hideOnMobile"><a href="about.html">About</a></li>
+
+      <li class="menu-button" onclick="showSidebar()"><a href="#">
+        <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 96 960 960">
+          <path d="M120 816v-60h720v60H120Z
+                   M120 606v-60h720v60H120Z
+                   M120 396v-60h720v60H120Z"/>
+        </svg></a>
+      </li>
+    </ul>
+  </nav>
+
+  <script>
+    function showSidebar() {
+      document.querySelector('.sidebar').style.display = 'flex';
+    }
+    function hideSidebar() {
+      document.querySelector('.sidebar').style.display = 'none';
+    }
+  </script>
+
+  <main>
+
+<h1>Analytics</h1>
+<h3> </h3>
+<h1>Quick Save</h1>
+<h3>
+<button class="button1" onclick="saveAllimg()">Save All PNG Graph Files</button>
+<button class="button1" onclick="saveAlljson()">Save All JSON Data Files</button>
+</h3>
+
+<!-- ===========================
+     MOISTURE CHART
+     =========================== -->
+<h2>Moisture Chart&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;AI Vision Root Chart</h2>
+
+<div id="chart-container1" style="display:flex; justify-content:space-around; width:50%; height:300px;">
+  <canvas id="moistureChart"></canvas>
+  <canvas id="AIChart"></canvas>
+</div>
+
+<h3><button class="button1" onclick="exportChart()">Export Moisture Chart (PNG)</button>
+<button class="button1"  onclick="saveMoistureJSON()">Export Moisture Data (JSON)</button></h3>
+<h3><button class="button1" onclick="exportinferenceChart()">Export AI Vision Chart (PNG)</button>
+<button class="button1"  onclick="saveinferenceJSON()">Export AI Vision Data (JSON)</button></h3>
+
+<span id="moist1" style="display:none">--</span>
+<span id="AI" style="display:none">--</span>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const ctx = document.getElementById('moistureChart').getContext('2d');
+const moistureChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [
+      {
+        label: 'Upper-Dome Moisture',
+        data: [],
+        borderColor: 'rgba(255, 215, 0)',
+        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+        fill: true,
+        tension: 0.4
+      },
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { title: { display: true, text: 'Moisture' } }
+    }
+  }
+});
+
+function updateChart(data) {
+  moistureChart.data.datasets[0].data.push(parseFloat(data.moist1));
+  moistureChart.data.labels.push(new Date().toLocaleTimeString());
+  moistureChart.update();
+}
+
+function exportChart() {
+  const link = document.createElement('a');
+  link.href = moistureChart.toBase64Image();
+  link.download = 'moisture_chart.png';
+  link.click();
+}
+
+async function updateData() {
+  try {
+    const response = await fetch('/sensor_data');
+    const data = await response.json();
+    document.getElementById('moist1').innerText = data.moist1;
+    updateChart(data);
+  } catch (err) {
+    console.error('Failed to fetch sensor data:', err);
+  }
+}
+setInterval(updateData, 1000);
+</script>
+
+<script>
+const aictx = document.getElementById('AIChart').getContext('2d');
+const AIChart = new Chart(aictx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [
+      {
+        label: 'AI Vision Inference (Wet/Dry)',
+        data: [],
+        borderColor: 'rgba(0, 255, 150)',
+        backgroundColor: 'rgba(0, 200, 0, 0.1)',
+        fill: true,
+        tension: 0.4
+      },
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { title: { display: true, text: 'Wet/Dry (Boolean)'} }
+    }
+  }
+});
+
+function updateChart8(data) {
+  AIChart.data.datasets[0].data.push(parseFloat(data.AI));
+  AIChart.data.labels.push(new Date().toLocaleTimeString());
+  AIChart.update();
+}
+
+function exportinferenceChart() {
+  const link = document.createElement('a');
+  link.href = AIChart.toBase64Image();
+  link.download = 'AI_chart.png';
+  link.click();
+}
+
+async function updateaiData() {
+  try {
+    const response = await fetch('/sensor_data');
+    const data = await response.json();
+    document.getElementById('AI').innerText = data.AI;
+    updateChart8(data);
+  } catch (err) {
+    console.error('Failed to fetch AI data:', err);
+  }
+}
+setInterval(updateaiData, 1000);
+</script>
+
+
+
+<!-- ===========================
+     VOC + TEMP CHARTS
+     =========================== -->
+<h2>VOC Sensor Chart &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Temperature Sensor Chart</h2>
+
+<div id="chart-container2" style="display:flex; justify-content:space-around; width:50%; height:300px;">
+  <canvas id="vocChart"></canvas>
+  <canvas id="tempChart"></canvas>
+</div>
+<h3><button class="button1"  onclick="exportChart1()">Export VOC Chart (PNG)</button>
+<button class="button1"  onclick="saveVOCJSON()">Export VOC Data (JSON)</button></h3>
+<h3><button class="button1"  onclick="exportChart2()">Export Temperature Chart (PNG)</button>
+<button class="button1"  onclick="saveTempJSON()">Export Temperature Data (JSON)</button></h3>
+
+
+<span id="VOC" style="display:none">--</span>
+<span id="temp" style="display:none">--</span>
+
+<script>
+/* VOC Chart */
+const vocctx = document.getElementById('vocChart').getContext('2d');
+const vocChart = new Chart(vocctx, {
+  type: 'line',
+  data: { labels: [], datasets: [{
+      label: 'Gas Resistance (kΩ)',
+      data: [],
+      borderColor: 'rgba(8, 14, 75)',
+      backgroundColor: 'rgba(8, 14, 75, 0.1)',
+      fill: true,
+      tension: 0.4
+  }]},
+  options: {
+    maintainAspectRatio: false,
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { title: { display: true, text: 'GR (kΩ)' } }
+    }
+  }
+});
+
+function updateChart1(data) {
+  vocChart.data.datasets[0].data.push(parseFloat(data.VOC));
+  vocChart.data.labels.push(new Date().toLocaleTimeString());
+  vocChart.update();
+}
+
+function exportChart1() {
+  const link = document.createElement('a');
+  link.href = vocChart.toBase64Image();
+  link.download = "voc_chart.png";
+  link.click();
+}
+
+async function updateData1() {
+  try {
+    const response = await fetch('/sensor_data');
+    const data = await response.json();
+    document.getElementById('VOC').innerText = data.VOC;
+    updateChart1(data);
+  } catch (err) {
+    console.error('Failed to fetch sensor data:', err);
+  }
+}
+setInterval(updateData1, 1000);
+
+
+/* Temperature Chart */
+const tempctx = document.getElementById('tempChart').getContext('2d');
+const tempChart = new Chart(tempctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Internal Temperature (°C)',
+      data: [],
+      borderColor: 'red',
+      backgroundColor: 'rgba(255, 0, 0, 0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  },
+  options: {
+    maintainAspectRatio: false,
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { title: { display: true, text: 'Temperature' } }
+    }
+  }
+});
+
+function updateChart2(data) {
+  tempChart.data.datasets[0].data.push(parseFloat(data.temperature));
+  tempChart.data.labels.push(new Date().toLocaleTimeString());
+  tempChart.update();
+}
+
+function exportChart2() {
+  const link = document.createElement('a');
+  link.href = tempChart.toBase64Image();
+  link.download = "temp_chart.png";
+  link.click();
+}
+
+async function updateData2() {
+  try {
+    const response = await fetch('/sensor_data');
+    const data = await response.json();
+    document.getElementById('temp').innerText = data.temperature;
+    updateChart2(data);
+  } catch (err) {
+    console.error('Failed to fetch sensor data:', err);
+  }
+}
+setInterval(updateData2, 1000);
+</script>
+
+<!-- ===========================
+     Humidity Graph
+     =========================== -->
+<h2>Humidity Chart</h2>
+
+<div id="chart-container5" style= "margin: auto; width:50%; height:300px;">
+  <canvas id="humidChart"></canvas>
+</div>
+<h3><button class="button1"  onclick="exportChart10()">Export Humidity Chart (PNG)</button>
+<button class="button1"  onclick="savehumidJSON()">Export Humidity Data (JSON)</button></h3>
+
+<span id="humidity" style="display:none">--</span>
+
+<script>
+const humidctx = document.getElementById('humidChart').getContext('2d');
+const humidChart = new Chart(humidctx, {
+  type: 'line',
+  data: { labels: [], datasets: [{
+      label: 'Reative Humidity (%)',
+      data: [],
+      borderColor: 'rgba(135, 206, 235)',
+      backgroundColor: 'rgba(135, 206, 235, 0.1)',
+      fill: true,
+      tension: 0.4
+  }]},
+  options: {
+    maintainAspectRatio: false,
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { title: { display: true, text: 'Humidity (kΩ%)' } }
+    }
+  }
+});
+
+function updateChart10(data) {
+  humidChart.data.datasets[0].data.push(parseFloat(data.humidity));
+  humidChart.data.labels.push(new Date().toLocaleTimeString());
+  humidChart.update();
+}
+
+function exportChart10() {
+  const link = document.createElement('a');
+  link.href = humidChart.toBase64Image();
+  link.download = "humidity_chart.png";
+  link.click();
+}
+
+async function updateData10() {
+  try {
+    const response = await fetch('/sensor_data');
+    const data = await response.json();
+    document.getElementById('humidity').innerText = data.humidity;
+    updateChart10(data);
+  } catch (err) {
+    console.error('Failed to fetch sensor data:', err);
+  }
+}
+setInterval(updateData10, 1000);
+</script>
+<!-- ===========================
+     JSON EXPORT SECTION
+     =========================== -->
+<script>
+// Moisture JSON Export
+function saveMoistureJSON() {
+  const data = moistureChart.data.labels.map((label, i) => ({
+    time: label,
+    upper: moistureChart.data.datasets[0].data[i],
+    lower: moistureChart.data.datasets[1].data[i]
+  }));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "moisture_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// VOC JSON Export
+function saveVOCJSON() {
+  const data = vocChart.data.labels.map((label, i) => ({
+    time: label,
+    voc: vocChart.data.datasets[0].data[i]
+  }));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "voc_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Temperature JSON Export
+function saveTempJSON() {
+  const data = tempChart.data.labels.map((label, i) => ({
+    time: label,
+    temperature: tempChart.data.datasets[0].data[i]
+  }));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "temperature_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// AI JSON Export
+function saveinferenceJSON() {
+  const data = AIChart.data.labels.map((label, i) => ({
+    time: label,
+    AI: AIChart.data.datasets[0].data[i]
+  }));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "AI_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Humidity JSON Export
+function savehumidJSON() {
+  const data = humidChart.data.labels.map((label, i) => ({
+    time: label,
+    Humidity: humidChart.data.datasets[0].data[i]
+  }));
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "humidity_data.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Save all at once (JSon)
+function saveAlljson() {
+  // Call each Export function seperately
+  saveMoistureJSON();
+  saveVOCJSON();
+  saveTempJSON();
+  saveinferenceJSON();
+  savehumidJSON();
+}
+// Save all at once (Img)
+function saveAllimg() {
+  // Call each EXport function seperately
+  exportChart();
+  exportinferenceChart();
+  exportChart1();
+  exportChart2();
+  exportChart6();
+  exportChart7();
+  exportChart10();
+}
+</script>
+</main>
+</body>
+</html>

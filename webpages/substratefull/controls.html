@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Set the character encoding for proper text rendering -->
+  <meta charset="UTF-8">
+
+  <!-- Ensures compatibility mode is disabled in old versions of Internet Explorer -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- Makes the page responsive across all devices and screen sizes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Page title as it appears in the browser tab -->
+  <title>Controls</title>
+  <!--Favicon -->
+  <link rel="icon" type="X" href="images/Tri-CountyLogo.png">
+  <!-- Connects the external stylesheet that defines layout, colors, and responsiveness -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- ===========================
+       NAVIGATION BAR
+       =========================== -->
+  <nav>
+    <!-- ===========================
+         SIDEBAR MENU (MOBILE VIEW)
+         =========================== -->
+    <!-- This menu is hidden by default (CSS: display:none)
+         and only becomes visible when the hamburger icon is clicked. -->
+    <ul class="sidebar">
+
+      <!-- Close ("X") button — triggers hideSidebar() when clicked -->
+      <li onclick="hideSidebar()">
+        <a href="#">
+          <!-- SVG X icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 96 960 960">
+            <path d="m249 849-42-42 231-231-231-231 42-42 
+                     231 231 231-231 42 42-231 231 
+                     231 231-42 42-231-231-231 231Z"/>
+          </svg>
+        </a>
+      </li>
+
+      <!-- Vertical list of navigation links (stacked in a column via flex-direction: column) -->
+      <!-- These replicate the main navbar links but are shown in the sidebar on mobile -->
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="analytics.html">Analytics</a></li>
+      <li><a href="photos.html">Photos</a></li>
+      <li><a href="controls.html">Controls</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+
+    </ul>
+
+    <!-- ===========================
+         MAIN NAVBAR (DESKTOP VIEW)
+         =========================== -->
+    <!-- This <ul> is always visible on desktop screens.
+         On smaller screens (<1000px), CSS hides most links
+         and shows only the hamburger button. -->
+    <ul>
+      <!-- Project name (aligned left via nav li:first-child { margin-right:auto; }) -->
+      <li><a href="index.html" class="logo-container"><img src="images/darklogo.png" alt="HexaFlow Logo"><span>HexaFlow UI</span></a></li> <!--Top Left Name-->
+
+      <!-- Standard navigation links.
+           These are visible on desktop but hidden on smaller screens (CSS: .hideOnMobile {display:none}) -->
+      <li class="hideOnMobile"><a href="index.html">Dashboard</a></li>
+      <li class="hideOnMobile"><a href="analytics.html">Analytics</a></li>
+      <li class="hideOnMobile"><a href="photos.html">Photos</a></li>
+      <li class="hideOnMobile"><a href="controls.html">Controls</a></li>
+      <li class="hideOnMobile"><a href="settings.html">Settings</a></li>
+      <li class="hideOnMobile"><a href="about.html">About</a></li>
+
+      <!-- ===========================
+           MENU BUTTON (HAMBURGER ICON)
+           =========================== -->
+      <!-- Hidden by default (CSS: display:none).
+           Appears when screen width <1320px via media query.
+           Clicking it calls showSidebar() to display the sidebar. -->
+      <li class="menu-button" onclick="showSidebar()">
+        <a href="#">
+          <!-- SVG Hamburger icon (three horizontal bars) -->
+          <svg xmlns="http://www.w3.org/2000/svg" height="26" width="26" viewBox="0 96 960 960">
+            <path d="M120 816v-60h720v60H120Z
+                     M120 606v-60h720v60H120Z
+                     M120 396v-60h720v60H120Z"/>
+          </svg>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- ===========================
+       JAVASCRIPT FUNCTIONALITY
+       =========================== -->
+  <script>
+    // When user clicks the hamburger icon:
+    // - Select the sidebar element.
+    // - Change its display property from "none" to "flex".
+    //   (CSS flex layout stacks items vertically.)
+    function showSidebar() {
+      const sidebar = document.querySelector('.sidebar')
+      sidebar.style.display = 'flex'
+    }
+
+    // When user clicks the X icon:
+    // - Hide the sidebar again by setting display to "none".
+    function hideSidebar() {
+      const sidebar = document.querySelector('.sidebar')
+      sidebar.style.display = 'none'
+    }
+  </script>
+<main>
+  <!-- Page Title -->
+  <h1 class="toptext">NanoLab Controls</h1>
+
+  <!-- ===========================
+       CONTROLS LAYOUT
+       Left = Description (2/3)
+       Right = Buttons (1/3)
+       =========================== -->
+  <div class="controls-layout">
+
+    <!-- ===========================
+         LEFT SIDE: DESCRIPTION
+         =========================== -->
+    <div class="controls-info">
+      <strong class="strong1">What These Controls Do:</strong>
+      <p>
+        <strong class="">Grow Mode:</strong> Activates plant growth settings <br><br>
+
+        <strong>View Mode:</strong> Adjusts lighting and camera settings for clear view inside<br><br>
+
+        <strong>Take Photo:</strong> Captures a manual image <br><br>
+
+        <strong>Start Test:</strong> Begins the automated experiment and data collection 
+      </p>
+    </div>
+
+    <!-- ===========================
+         RIGHT SIDE: CONTROL BUTTONS
+         =========================== -->
+    <div class="controls-buttons">
+
+      <!-- Grow Mode Button -->
+      <form action="/controlbutton" method="POST">
+        <button class="button1" name="growmode">Grow Mode</button>
+      </form>
+
+      <!-- View Mode Button -->
+      <form action="/controlbutton" method="POST">
+        <button class="button1" name="viewmode">View Mode</button>
+      </form>
+
+      <!-- Take Photo Button -->
+      <form action="/controlbutton" method="POST">
+        <button class="button1" name="manualphoto">Take Photo</button>
+      </form>
+
+      <!-- Start Test Button -->
+      <form action="/controlbutton" method="POST">
+        <button class="button1" name="starttest">Start Test</button>
+      </form>
+
+    </div>
+  </div>
+</main>
+</body>
+</html>
