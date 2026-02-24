@@ -188,12 +188,33 @@ def pump_cycle(modifyer):
 @app.route('/sensor_data')
 def sensor_data():
     global aiword, avg_wet
-    humidity = random.randint(30, 35)
-    temperature = random.randint(23, 24)
-    voc = random.randint(155, 165)
-    moist1 = 0
-    TDS = 50
-    ph = 5
+    try:
+        humidity = round(bme680.humidity, 1)
+        lasthumid = humidity
+    except Exception as e:
+        if lasthumid is None:
+            humidity = 0
+        else:
+            humidity = lasthumid
+    try:
+        temperature = round(bme680.temperature, 1)
+        lasttemp = temperature
+    except Exception as e:
+        lasttemp = temperature
+    try:
+        voc = round(bme680.gas, 1) / 1000
+        lastvoc = voc
+    except Exception as e:
+        voc = lastvoc
+    moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
+    if moist1 >= 100:
+        moist1 = 100
+    if moist1 <= 0:
+        moist1 = 0
+    tdsvolt = tds.voltage
+    tdsraw = ((tdsvolt / 2.3) * 1000)
+    TDS = int(round(tdsraw, 0))
+    ph = pH.voltage
     visionresult = avg_wet
     if avg_wet == 0 or avg_wet == "0":
        aiword = "Dry"
