@@ -130,53 +130,31 @@
       <span id="moist1">--</span>%
     </span>
   </div>
-
-  
 </div>
-<body>
-<h1>Select an Option</h1>
-    <h2>
-    <div>
-        <button class="button1" onclick="changeOutput('Option 1 was selected')">Option 1</button>
-        <button class="button1" onclick="changeOutput('Option 2 was selected')">Option 2</button>
-        <button class="button1" onclick="changeOutput('Option 3 was selected')">Option 3</button>
-    </div>
-</h2>
-    <!-- Output area -->
-    <p id="output-area">No option selected yet.</p>
-    <script>
-        function changeOutput(newText) {
-            var outputElement = document.getElementById("output-area");
-            outputElement.textContent = newText;
-        }
-    </script>
-    <h2>Live Camera View</h2> <!-- Sub Header -->
-<img id="bg" src="/video_feed" class="PhotoStyle1">
-
-
-
-
-
-
-
-
-
-
-
 <h1>Select a Camera</h1>
 <h2>
 <div>
-    <button class="button1" onclick="changeCamera('/video_feed_cam1')">Camera 1</button>
-    <button class="button1" onclick="changeCamera('/video_feed_cam2')">Camera 2</button>
-    <button class="button1" onclick="changeCamera('/video_feed_cam3')">Camera 3</button>
+    <button class="button1" onclick="changeCamera('/video_feed_cam1'),changeOutput('Camera 1 was selected')">Camera 1</button>
+    <button class="button1" onclick="changeCamera('/video_feed_cam2'),changeOutput('Camera 2 was selected')">Camera 2</button>
+    <button class="button1" onclick="changeCamera('/video_feed_cam3'),changeOutput('Camera 3 was selected')">Camera 3</button>
 </div>
 </h2>
-<h2>Live Camera View</h2>
+
+<!-- Output area -->
+    
+    <div class="controls-info">
+      <h2>Live Camera View</h2>
+  <h3 id="output-area">No option selected yet.</h3>
 <img id="camera-view" src="" class="PhotoStyle1">
+</div>
 <script>
     function changeCamera(newSrc) {
         var cam = document.getElementById("camera-view");
         cam.src = newSrc;
+    }
+    function changeOutput(newText) {
+            var outputElement = document.getElementById("output-area");
+            outputElement.textContent = newText;
     }
 </script>
 
