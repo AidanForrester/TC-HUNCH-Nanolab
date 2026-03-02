@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -95,8 +96,9 @@
 <main>
  <h2>Current Sensor Values</h2>
 <!--Grid Class -->
-<div class="sensorgrid">
 
+<div class="sensorgrid">
+  
   <div class="sensorcard">
     <span class="sensorlabel">Temperature</span>
     <span class="sensorvalue">
@@ -129,11 +131,57 @@
     </span>
   </div>
 
+  
 </div>
-
-
+<body>
+<h1>Select an Option</h1>
+    <h2>
+    <div>
+        <button class="button1" onclick="changeOutput('Option 1 was selected')">Option 1</button>
+        <button class="button1" onclick="changeOutput('Option 2 was selected')">Option 2</button>
+        <button class="button1" onclick="changeOutput('Option 3 was selected')">Option 3</button>
+    </div>
+</h2>
+    <!-- Output area -->
+    <p id="output-area">No option selected yet.</p>
+    <script>
+        function changeOutput(newText) {
+            var outputElement = document.getElementById("output-area");
+            outputElement.textContent = newText;
+        }
+    </script>
     <h2>Live Camera View</h2> <!-- Sub Header -->
 <img id="bg" src="/video_feed" class="PhotoStyle1">
+
+
+
+
+
+
+
+
+
+
+
+<h1>Select a Camera</h1>
+<h2>
+<div>
+    <button class="button1" onclick="changeCamera('/video_feed_cam1')">Camera 1</button>
+    <button class="button1" onclick="changeCamera('/video_feed_cam2')">Camera 2</button>
+    <button class="button1" onclick="changeCamera('/video_feed_cam3')">Camera 3</button>
+</div>
+</h2>
+<h2>Live Camera View</h2>
+<img id="camera-view" src="" class="PhotoStyle1">
+<script>
+    function changeCamera(newSrc) {
+        var cam = document.getElementById("camera-view");
+        cam.src = newSrc;
+    }
+</script>
+
+
+
 </main>
 
  <!-- ===========================
@@ -174,8 +222,13 @@ async function updateData() {
 }
 updateData();
 setInterval(updateData, 1000);
+
+
 </script>
 </body>
 </html>
 
 
+
+
+</html>
