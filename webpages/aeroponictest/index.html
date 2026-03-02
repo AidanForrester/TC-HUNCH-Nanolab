@@ -133,6 +133,7 @@
 </div>
 <h1>Select a Camera</h1>
 <h2>
+  <!--Select a Camera Buttons -->
 <div>
     <button class="button1" onclick="changeCamera('/video_feed_cam1'),changeOutput('Camera 1 was selected')">Camera 1</button>
     <button class="button1" onclick="changeCamera('/video_feed_cam2'),changeOutput('Camera 2 was selected')">Camera 2</button>
@@ -142,16 +143,20 @@
 
 <!-- Output area -->
     
-    <div class="controls-info">
-      <h2>Live Camera View</h2>
-  <h3 id="output-area">No option selected yet.</h3>
+    <div class="controls-info"> <!--White Box BG-->
+      <h2>Live Camera View</h2> <!--Header-->
+  <h3 id="output-area">No option selected yet</h3> <!--No Option Selected Notif-->
+<!--Camera View Output That Changes-->
 <img id="camera-view" src="" class="PhotoStyle1">
 </div>
+<!--JavaScript change Camera Output as well as selector Output-->
 <script>
+  //Changes Camera Output
     function changeCamera(newSrc) {
         var cam = document.getElementById("camera-view");
         cam.src = newSrc;
     }
+  //Changes Option Selected Output
     function changeOutput(newText) {
             var outputElement = document.getElementById("output-area");
             outputElement.textContent = newText;
