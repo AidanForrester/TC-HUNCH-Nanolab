@@ -501,6 +501,86 @@ function saveAllimg() {
   exportChart10();
 }
 </script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+<!--Chart Import for Comparison-->
+<h2>Import JSON Files to Compare Charts</h2>
+<p>Select one or more .json files formatted for Chart.js.</p>
+<input type="file" id="fileInput" accept=".json" multiple>
+<div id="charts"></div>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const chartsDiv = document.getElementById('charts');
+
+  fileInput.addEventListener('change', handleFiles);
+
+  function handleFiles(event) {
+    const files = event.target.files;
+    chartsDiv.innerHTML = ''; // clear previous charts
+
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const json = JSON.parse(e.target.result);
+
+          // Expected JSON:
+          // {
+          //   "type": "line",
+          //   "labels": ["Jan","Feb","Mar"],
+          //   "datasets": [
+          //     { "label": "Sales", "data": [10,20,15], "borderColor": "red", "backgroundColor": "rgba(255,0,0,0.2)" }
+          //   ],
+          //   "options": { ... }   // optional
+          // }
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'chart-wrapper';
+
+          const title = document.createElement('div');
+          title.textContent = file.name;
+          title.style.fontWeight = 'bold';
+          title.style.marginBottom = '5px';
+          wrapper.appendChild(title);
+
+          const canvas = document.createElement('canvas');
+          wrapper.appendChild(canvas);
+          chartsDiv.appendChild(wrapper);
+
+          const ctx = canvas.getContext('2d');
+
+          new Chart(ctx, {
+            type: json.type || 'line',
+            data: {
+              labels: json.labels || [],
+              datasets: json.datasets || []
+            },
+            options: json.options || {
+              responsive: true,
+              plugins: {
+                legend: { position: 'top' },
+                title: { display: false }
+              },
+              scales: {
+                x: { ticks: { autoSkip: true } },
+                y: { beginAtZero: true }
+              }
+            }
+          });
+        } catch (err) {
+          alert('Error parsing JSON in file: ' + file.name + '\n' + err);
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+</script>
+
+
+
 </main>
 </body>
 </html>
