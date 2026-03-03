@@ -102,11 +102,17 @@ WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages/
 WEB_DIR = os.path.abspath(WEB_DIR)
 
 # Initialize camera capture and set frame buffer to 1 to always get the freshest frame
-video = cv2.VideoCapture(0)
-video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+video_cam1 = cv2.VideoCapture(0)
+video_cam1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+video_cam2 = cv2.VideoCapture(1)
+video_cam2.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+video_cam3 = cv2.VideoCapture(2)
+video_cam3.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 new_width = 640
 new_height = 480
 newestframe = None  # Shared variable updated by the frame capture thread
+newestframe2 = None  # Shared variable updated by the frame capture thread
+newestframe3 = None  # Shared variable updated by the frame capture thread
 
 # Initialize ADS1115 ADC (I2C address 0x48) and map analog channels to sensors
 ads = ADS1115(i2c_bus, address=0x48)
@@ -149,7 +155,23 @@ aiword = ""               # Human-readable version of avg_wet ("Dry" or "Wet")
 
 def obtain_frame():
     """Read a single frame from the camera. Returns None if capture fails."""
-    ret, frame = video.read()
+    ret, frame = video_cam1.read()
+    if frame is None or ret is False:
+        time.sleep(0.1)
+    else:
+        return frame
+
+def obtain_frame2():
+    """Read a single frame from the camera. Returns None if capture fails."""
+    ret, frame = video_cam2.read()
+    if frame is None or ret is False:
+        time.sleep(0.1)
+    else:
+        return frame
+    
+def obtain_frame3():
+    """Read a single frame from the camera. Returns None if capture fails."""
+    ret, frame = video_cam3.read()
     if frame is None or ret is False:
         time.sleep(0.1)
     else:
@@ -275,10 +297,50 @@ def video_stream():
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-@app.route('/video_feed')
+def video_stream2():
+    """
+    Generator that yields MJPEG frames for the live video feed endpoint.
+    Resizes and JPEG-encodes the latest frame on each iteration.
+    """
+    global newestframe2
+    while True:
+            frame = newestframe2.copy()
+            resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+            ret, buffer = cv2.imencode('.jpg', resized_frame)
+            frame_bytes = buffer.tobytes()
+
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+def video_stream3():
+    """
+    Generator that yields MJPEG frames for the live video feed endpoint.
+    Resizes and JPEG-encodes the latest frame on each iteration.
+    """
+    global newestframe3
+    while True:
+            frame = newestframe3.copy()
+            resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+            ret, buffer = cv2.imencode('.jpg', resized_frame)
+            frame_bytes = buffer.tobytes()
+
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+@app.route('/video_feed_cam1')
 def video_feed():
     """Streams live MJPEG video from the camera."""
     return Response(video_stream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/video_feed_cam2')
+def video_feed():
+    """Streams live MJPEG video from the camera."""
+    return Response(video_stream2(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/video_feed_cam3')
+def video_feed():
+    """Streams live MJPEG video from the camera."""
+    return Response(video_stream3(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
@@ -329,8 +391,8 @@ def controls():
     - manualphoto: triggers an immediate one-off photo
     - starttest: begins a timed pump + photo test sequence
     """
-     global growmode, viewmode, manualphoto, istest, testcheck
-     if 'growmode' in request.form:
+    global growmode, viewmode, manualphoto, istest, testcheck
+    if 'growmode' in request.form:
          # Red LEDs for chlorophyll-a, blue LEDs for chlorophyll-b absorption
          pixels[1] = (255, 0, 0)
          pixels[4] = (255, 0, 0)
@@ -340,18 +402,18 @@ def controls():
          pixels[10] = (0, 0, 255)
          pixels.show()
          returnpage = 'dashpage'
-     if 'viewmode' in request.form:
+    if 'viewmode' in request.form:
          pixels.fill((255, 200, 180))  # Warm white for camera/visual inspection
          pixels.show()
          returnpage = 'dashpage'
-     if 'manualphoto' in request.form:
+    if 'manualphoto' in request.form:
          manualphoto = True
          returnpage = 'photopage'
-     if 'starttest' in request.form:
+    if 'starttest' in request.form:
          istest = True
          returnpage = 'graphpage'
-     testcheck = returnpage
-     return redirect(url_for(returnpage))
+    testcheck = returnpage
+    return redirect(url_for(returnpage))
 
 def monitored_photos():
     """
@@ -496,11 +558,21 @@ if __name__ == "__main__":
 
         def frame_task():
             """Continuously grab the latest camera frame into the shared newestframe variable."""
-            global newestframe
+            global newestframe, newestframe2, newestframe3
             while True:
                 frame = obtain_frame()
                 if frame is not None:
                     newestframe = frame
+                else:
+                    time.sleep(0.02)
+                frame2 = obtain_frame2()
+                if frame is not None:
+                    newestframe2 = frame2
+                else:
+                    time.sleep(0.02)
+                frame3 = obtain_frame3()
+                if frame is not None:
+                    newestframe3 = frame3
                 else:
                     time.sleep(0.02)
 
