@@ -116,11 +116,30 @@
   </script>
 <main>
   <!--Trial Script for Importing charts -->
-  
+  <!DOCTYPE html>
+<html>
+<head>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #charts { display: flex; flex-wrap: wrap; gap: 30px; }
+    .chart-wrapper {
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 400px;
+      height: 320px;
+      box-sizing: border-box;
+    }
+    .chart-wrapper canvas {
+      width: 100% !important;
+      height: 250px !important;
+    }
+  </style>
 
 <h2>Import JSON Files to Compare Charts</h2>
 <p>Select one or more <code>.json</code> files formatted for Chart.js.</p>
-<input class="button1" type="file" id="fileInput" accept=".json" multiple>
+<input type="file" id="fileInput" accept=".json" multiple>
 <div id="charts"></div>
 
 <script>
@@ -190,6 +209,10 @@
     });
   }
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
