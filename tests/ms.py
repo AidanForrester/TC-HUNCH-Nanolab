@@ -251,6 +251,53 @@ def sensor_data():
     """
     Flask endpoint that reads all sensors and returns a JSON payload.
     Falls back to last known values if a sensor read fails.
+    Records sensor data to local JSON file.
+    """
+    global aiword, avg_wet
+    try:
+        humidity = round(bme680.humidity, 1)
+        lasthumid = humidity
+    except Exception as e:
+        if lasthumid is None:
+            humidity = 0
+        else:
+            humidity = lasthumid
+    try:
+        temperature = round(bme680.temperature, 1)
+        lasttemp = temperature
+    except Exception as e:
+        lasttemp = temperature
+    try:
+        voc = round(bme680.gas, 1) / 1000
+        lastvoc = voc
+    except Exception as e:
+        voc = lastvoc
+
+    # Convert moisture voltage to percentage using calibration bounds
+    moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
+    if moist1 >= 100:
+        moist1 = 100
+    if moist1 <= 0:
+        moist1 = 0
+
+    # Convert TDS voltage to %
+    tdsvolt = tds.voltage
+    tdsraw = ((tdsvolt / 2.3) * 1000)
+    TDS = int(round(tdsraw, 0))
+
+    ph = pH.voltage  # Raw pH voltage (calibration handled client-side or elsewhere)
+
+    visionresult = avg_wet
+    # Translate binary AI result to human-readable string
+    if avg_wet == 0 or avg_wet == "0":
+       aiword = "Dry"
+    else:
+       aiword = "Wet"
+    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'AI': visionresult, 'aiword': aiword, 'moist1': moist1, 'pH': ph, 'tds': TDS})
+
+def local_sensor_record():
+    """    
+        Records sensor data to local JSON file.
     """
     global aiword, avg_wet
     try:
@@ -293,24 +340,38 @@ def sensor_data():
     else:
        aiword = "Wet"
 
-    #Add sensor readings to local file named after the day
+    #Get the current day from datetime to serve as the json name
     day = datetime.date()
     try:
             with open("TC_HUNCH_Nanolab/" + day + ".json", 'r') as f:
                 data = json.load(f)
-            data[].append("Time: " + get_time_information())
-            data[].append("Humidity: " + humidity + " %")    
-            data[].append("Temperature: " + temperature + " °C")
-            data[].append("VOC: " + voc + " kΩ")
-            data[].append("TDS: " + TDS + " %")
-            data[].append("AI: " + avg_wet)
+    #Write an entry with all sensor data shown in the WebUI
+            entry = {
+                "Time" : get_time_information()
+                "Humidity" : humidity + " %" 
+                "Temperature" : + temperature + " °C"
+                "VOC" : voc + " kΩ"
+                "TDS" : TDS + " %"
+                "AI" : avg_wet
+            }
+            data.append(entry)
             with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
                     json.dump(data, f, indent=4)
     except FileNotFoundError:
-    # Create photolist.json from scratch if it doesn't exist yet
+    # Create day's .json from scratch if it doesn't exist yet
         with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
-    
-    return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'AI': visionresult, 'aiword': aiword, 'moist1': moist1, 'pH': ph, 'tds': TDS})
+            data = []
+            entry = {
+                "Time" : get_time_information()
+                "Humidity" : humidity + " %" 
+                "Temperature" : + temperature + " °C"
+                "VOC" : voc + " kΩ"
+                "TDS" : TDS + " %"
+                "AI" : avg_wet
+            }
+            data.append(entry)
+            with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
+                    json.dump(data, f, indent=4)
 
 def video_stream():
     """
@@ -556,11 +617,11 @@ def photos(filename):
 ## --- Main Entry Point ---
 if __name__ == "__main__":
         def background_sensor_task():
-            """Continuously poll sensors every 2 seconds in the background."""
+            """Continuously poll sensors every second in the background."""
             with app.app_context():
                 while True:
-                    sensor_data()
-                    time.sleep(2)
+                    local_sensor_record()
+                    time.sleep(1)
 
         def background_photo_task():
             """Run the photo monitoring loop in the background."""
