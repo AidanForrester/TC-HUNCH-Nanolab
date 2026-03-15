@@ -234,6 +234,18 @@ def pump_cycle(modifyer):
         time.sleep(0.25)
     pump_pin.value = False
 
+
+#Check if JSON for day exists, create if does not, and open either way
+
+#Format the time for chart.js
+def get_time_information()
+    if int(datetime.hour()) > 23:
+        amorpm = "pm"
+    else:
+        amorpm = "am"
+    formatted_time = datetime.time()[-7] + " " + amorpm
+    return formatted_time
+
 @app.route('/sensor_data')
 def sensor_data():
     """
@@ -267,7 +279,7 @@ def sensor_data():
     if moist1 <= 0:
         moist1 = 0
 
-    # Convert TDS voltage to ppm
+    # Convert TDS voltage to %
     tdsvolt = tds.voltage
     tdsraw = ((tdsvolt / 2.3) * 1000)
     TDS = int(round(tdsraw, 0))
@@ -280,6 +292,24 @@ def sensor_data():
        aiword = "Dry"
     else:
        aiword = "Wet"
+
+    #Add sensor readings to local file named after the day
+    day = datetime.date()
+    try:
+            with open("TC_HUNCH_Nanolab/" + day + ".json", 'r') as f:
+                data = json.load(f)
+            data[].append("Time: " + get_time_information())
+            data[].append("Humidity: " + humidity + " %")    
+            data[].append("Temperature: " + temperature + " °C")
+            data[].append("VOC: " + voc + " kΩ")
+            data[].append("TDS: " + TDS + " %")
+            data[].append("AI: " + avg_wet)
+            with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
+                    json.dump(data, f, indent=4)
+    except FileNotFoundError:
+    # Create photolist.json from scratch if it doesn't exist yet
+        with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
+    
     return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'AI': visionresult, 'aiword': aiword, 'moist1': moist1, 'pH': ph, 'tds': TDS})
 
 def video_stream():
