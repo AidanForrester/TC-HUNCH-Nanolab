@@ -101,7 +101,7 @@ app = Flask(__name__, template_folder='../webpages/' + module_config.strip())
 WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages/" + module_config.strip())
 WEB_DIR = os.path.abspath(WEB_DIR)
 
-# Initialize camera capture and set frame buffer to 1 to always get the freshest frame
+# Initialize camera captures (3 cameras) and set frame buffer to 1 to always get the freshest frame
 video_cam1 = cv2.VideoCapture(0)
 video_cam1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 video_cam2 = cv2.VideoCapture(1)
@@ -110,9 +110,9 @@ video_cam3 = cv2.VideoCapture(2)
 video_cam3.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 new_width = 640
 new_height = 480
-newestframe = None  # Shared variable updated by the frame capture thread
-newestframe2 = None  # Shared variable updated by the frame capture thread
-newestframe3 = None  # Shared variable updated by the frame capture thread
+newestframe = None   # Latest frame from cam1, updated by frame_task thread
+newestframe2 = None  # Latest frame from cam2, updated by frame_task thread
+newestframe3 = None  # Latest frame from cam3, updated by frame_task thread
 
 # Initialize ADS1115 ADC (I2C address 0x48) and map analog channels to sensors
 ads = ADS1115(i2c_bus, address=0x48)
@@ -127,14 +127,14 @@ minm1 = 0.16073 # Voltage reading submerged (wet)
 # --- State Variables ---
 manualphoto = False       # Flag to trigger a one-off manual photo
 previous = time.time()    # Timestamp of last photo
-delta = 0                 # Time elapsed since last photo
+delta = 0                 # Time elapsed since last photo (seconds)
 istest = False            # Whether a test sequence is currently running
-reference = 1
+reference = 1             # Reserved for future use
 startingphoto = True      # Forces an immediate photo on first run
 photolistlocation = "TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/photolist.json"
 testtime = None           # Timestamp folder name for current test session
-olddelta = None           # Saved delta to restore after a test
-newphoto = False          # Flag indicating a new photo was just saved
+olddelta = None           # Saved delta to restore after a test completes
+newphoto = False          # Flag indicating a new photo was just saved and needs logging
 pump_constant = 5.18      # Base pump run duration in seconds
 stopper = False           # Stops photo capture when test photo count is reached
 
@@ -148,13 +148,13 @@ testfirstrun = False      # Ensures test initialization only happens once per te
 testphotocount = 0        # Counter for photos taken in the current test
 pump_modifyer = 1         # Multiplier applied to pump_constant for variable pump durations
 
-avg_wet = 0               # Rolling average AI result: 0 = dry, 1 = wet
+avg_wet = 0               # Smoothed AI result: 0 = dry, 1 = wet
 aiword = ""               # Human-readable version of avg_wet ("Dry" or "Wet")
 
 # --- Functions ---
 
 def obtain_frame():
-    """Read a single frame from the camera. Returns None if capture fails."""
+    """Read a single frame from cam1. Returns None if capture fails."""
     ret, frame = video_cam1.read()
     if frame is None or ret is False:
         time.sleep(0.1)
@@ -162,7 +162,7 @@ def obtain_frame():
         return frame
 
 def obtain_frame2():
-    """Read a single frame from the camera. Returns None if capture fails."""
+    """Read a single frame from cam2. Returns None if capture fails."""
     ret, frame = video_cam2.read()
     if frame is None or ret is False:
         time.sleep(0.1)
@@ -170,7 +170,7 @@ def obtain_frame2():
         return frame
     
 def obtain_frame3():
-    """Read a single frame from the camera. Returns None if capture fails."""
+    """Read a single frame from cam3. Returns None if capture fails."""
     ret, frame = video_cam3.read()
     if frame is None or ret is False:
         time.sleep(0.1)
@@ -179,7 +179,7 @@ def obtain_frame3():
 
 def root_ai_read():
     """
-    Run the TFLite model on the latest camera frame to classify root zone
+    Run the TFLite model on the latest cam1 frame to classify root zone
     as wet or dry. Updates the rolling average prediction (avg_wet).
     """
     global avg_wet
@@ -234,16 +234,13 @@ def pump_cycle(modifyer):
         time.sleep(0.25)
     pump_pin.value = False
 
-
-#Check if JSON for day exists, create if does not, and open either way
-
-#Format the time for chart.js
-def get_time_information()
-    if int(datetime.hour()) > 23:
+def get_time_information():
+    """Return a formatted time string (e.g. '4:17:39 PM') for chart labels and JSON records."""
+    if int(datetime.now().hour) >= 12:
         amorpm = "pm"
     else:
         amorpm = "am"
-    formatted_time = datetime.time()[-7] + " " + amorpm
+    formatted_time = str(datetime.now().time())[:7] + " " + amorpm
     return formatted_time
 
 @app.route('/sensor_data')
@@ -251,7 +248,6 @@ def sensor_data():
     """
     Flask endpoint that reads all sensors and returns a JSON payload.
     Falls back to last known values if a sensor read fails.
-    Records sensor data to local JSON file.
     """
     global aiword, avg_wet
     try:
@@ -280,7 +276,7 @@ def sensor_data():
     if moist1 <= 0:
         moist1 = 0
 
-    # Convert TDS voltage to %
+    # Convert TDS voltage to ppm equivalent
     tdsvolt = tds.voltage
     tdsraw = ((tdsvolt / 2.3) * 1000)
     TDS = int(round(tdsraw, 0))
@@ -296,8 +292,9 @@ def sensor_data():
     return jsonify({'humidity': humidity, 'temperature': temperature, 'VOC': voc, 'AI': visionresult, 'aiword': aiword, 'moist1': moist1, 'pH': ph, 'tds': TDS})
 
 def local_sensor_record():
-    """    
-        Records sensor data to local JSON file.
+    """
+    Read all sensors and append a timestamped entry to today's JSON log file.
+    Creates the file from scratch if it doesn't exist yet.
     """
     global aiword, avg_wet
     try:
@@ -326,7 +323,7 @@ def local_sensor_record():
     if moist1 <= 0:
         moist1 = 0
 
-    # Convert TDS voltage to %
+    # Convert TDS voltage to ppm equivalent
     tdsvolt = tds.voltage
     tdsraw = ((tdsvolt / 2.3) * 1000)
     TDS = int(round(tdsraw, 0))
@@ -340,12 +337,11 @@ def local_sensor_record():
     else:
        aiword = "Wet"
 
-    #Get the current day from datetime to serve as the json name
-    day = datetime.date()
+    # Use today's date as the JSON filename (e.g. "2026-04-28.json")
+    day = str(datetime.now().date())
     try:
             with open("TC_HUNCH_Nanolab/" + day + ".json", 'r') as f:
                 data = json.load(f)
-    #Write an entry with all sensor data shown in the WebUI
             entry = {
                 "Time" : get_time_information()
                 "Humidity" : humidity + " %" 
@@ -358,7 +354,7 @@ def local_sensor_record():
             with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
                     json.dump(data, f, indent=4)
     except FileNotFoundError:
-    # Create day's .json from scratch if it doesn't exist yet
+        # Create day's .json from scratch if it doesn't exist yet
         with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
             data = []
             entry = {
@@ -375,7 +371,7 @@ def local_sensor_record():
 
 def video_stream():
     """
-    Generator that yields MJPEG frames for the live video feed endpoint.
+    Generator that yields MJPEG frames from cam1 for the live video feed endpoint.
     Resizes and JPEG-encodes the latest frame on each iteration.
     """
     global newestframe
@@ -390,7 +386,7 @@ def video_stream():
 
 def video_stream2():
     """
-    Generator that yields MJPEG frames for the live video feed endpoint.
+    Generator that yields MJPEG frames from cam2 for the live video feed endpoint.
     Resizes and JPEG-encodes the latest frame on each iteration.
     """
     global newestframe2
@@ -405,7 +401,7 @@ def video_stream2():
 
 def video_stream3():
     """
-    Generator that yields MJPEG frames for the live video feed endpoint.
+    Generator that yields MJPEG frames from cam3 for the live video feed endpoint.
     Resizes and JPEG-encodes the latest frame on each iteration.
     """
     global newestframe3
@@ -420,18 +416,48 @@ def video_stream3():
 
 @app.route('/video_feed_cam1')
 def video_feed():
-    """Streams live MJPEG video from the camera."""
+    """Streams live MJPEG video from cam1."""
     return Response(video_stream(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/video_feed_cam2')
-def video_feed():
-    """Streams live MJPEG video from the camera."""
+def video_feed2():
+    """Streams live MJPEG video from cam2."""
     return Response(video_stream2(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/video_feed_cam3')
-def video_feed():
-    """Streams live MJPEG video from the camera."""
+def video_feed3():
+    """Streams live MJPEG video from cam3."""
     return Response(video_stream3(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
+
+def save_all_cameras(folder, timestamp):
+    """Capture and save the latest frame from each active camera to the given folder."""
+    global newestframe, newestframe2, newestframe3, newphoto
+
+    # CAM1
+    if newestframe is not None:
+        frame = newestframe.copy()
+        resized = cv2.resize(frame, (new_width, new_height))
+        name = f"{timestamp}_cam1.jpg"
+        cv2.imwrite(name, resized)
+        shutil.move(name, folder + name)
+
+    # CAM2
+    if newestframe2 is not None:
+        frame = newestframe2.copy()
+        resized = cv2.resize(frame, (new_width, new_height))
+        name = f"{timestamp}_cam2.jpg"
+        cv2.imwrite(name, resized)
+        shutil.move(name, folder + name)
+
+    # CAM3
+    if newestframe3 is not None:
+        frame = newestframe3.copy()
+        resized = cv2.resize(frame, (new_width, new_height))
+        name = f"{timestamp}_cam3.jpg"
+        cv2.imwrite(name, resized)
+        shutil.move(name, folder + name)
+
+    newphoto = True
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
@@ -525,21 +551,15 @@ def monitored_photos():
                 dataset = "photos"
                 currenttimeget = str(datetime.now())
                 currenttime = currenttimeget.replace(" ", "at")  # Make timestamp filename-safe
-                if delta >= monitortime:
-                    if newestframe is None:
-                        time.sleep(0.01)
-                        continue
-                    frame = newestframe.copy()
-                    resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-                    cv2.imwrite(currenttime + '.jpg', resized_frame)
-                    folder = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/"
-                    shutil.move(currenttime + '.jpg', folder + currenttime + '.jpg')
+                if delta >= monitortime:  # Take a photo once the monitoring interval has elapsed
+                    save_all_cameras(folder2 + "/", currenttime)
                     delta = 0
-                    newphoto = True
                     previous = current
-                    photolocation = 'photos/' + str(currenttime) + '.jpg'
-                    if testtime is not None:
-                             testtime = None
+                    photolocation = 'photos/' + str(testtime) + '/' + str(currenttime)
+                    testphotocount += 1
+                    print("Photos Taken! " + str(testphotocount))
+                    if testphotocount >= requestedphotocount:
+                        stopper = True
                 if olddelta is not None:
                     delta = olddelta  # Restore pre-test delta when returning to monitoring mode
                     olddelta = None
@@ -562,27 +582,13 @@ def monitored_photos():
             currenttimeget = str(datetime.now())
             currenttime = currenttimeget.replace(" ", "at")
             if delta >= testphotogap:
-                if newestframe is None:
-                    time.sleep(0.01)
-                    continue
-                frame = newestframe.copy()
-                resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
-                cv2.imwrite(currenttime + '.jpg', resized_frame)
-                folder = folder2
-                shutil.move(currenttime + '.jpg', folder + '/' + currenttime + '.jpg')
-                delta = 0
-                newphoto = True
-                previous = current
-                photolocation = 'photos/' + str(testtime) + '/' + str(currenttime) + '.jpg'
-                testphotocount = testphotocount + 1
-                print("Photos Taken! " + str(testphotocount))
                 if testphotocount == requestedphotocount:
                     stopper = True  # Stop capturing once target count is reached
             if delta >= 5.18:
-                istest = False  # Safety timeout: exit test mode if pump cycle time elapses
+                istest = False  # Safety timeout: exit test mode if pump cycle time elapses without completion
 
         if manualphoto == True:
-            # Reset photo timing so next scheduled photo captures immediately
+            # Reset photo timing so the next scheduled photo captures immediately
             olddelta = delta
             startingphoto = True
             manualphoto = False
@@ -617,7 +623,7 @@ def photos(filename):
 ## --- Main Entry Point ---
 if __name__ == "__main__":
         def background_sensor_task():
-            """Continuously poll sensors every second in the background."""
+            """Continuously poll sensors and log to JSON every second in the background."""
             with app.app_context():
                 while True:
                     local_sensor_record()
@@ -629,14 +635,14 @@ if __name__ == "__main__":
                 monitored_photos()
 
         def root_ai_task():
-            """Continuously run AI inference on the latest camera frame."""
+            """Continuously run AI inference on the latest cam1 frame."""
             while True:
                 root_ai_read()
 
         def test_task():
             """
             Watch for a test trigger from the web UI. When detected,
-            runs a pump cycle and resets test state for a fresh run.
+            runs a pump cycle and resets test state for the next run.
             """
             global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime
             while True:
@@ -648,7 +654,7 @@ if __name__ == "__main__":
                     testphotocount = 0
 
         def frame_task():
-            """Continuously grab the latest camera frame into the shared newestframe variable."""
+            """Continuously grab the latest frame from all 3 cameras into shared variables."""
             global newestframe, newestframe2, newestframe3
             while True:
                 frame = obtain_frame()
@@ -657,12 +663,12 @@ if __name__ == "__main__":
                 else:
                     time.sleep(0.02)
                 frame2 = obtain_frame2()
-                if frame is not None:
+                if frame2 is not None:
                     newestframe2 = frame2
                 else:
                     time.sleep(0.02)
                 frame3 = obtain_frame3()
-                if frame is not None:
+                if frame3 is not None:
                     newestframe3 = frame3
                 else:
                     time.sleep(0.02)
