@@ -256,7 +256,7 @@ def sensor_data():
     Flask endpoint that reads all sensors and returns a JSON payload.
     Falls back to last known values if a sensor read fails.
     """
-    global aiword, avg_wet
+    global aiword, avg_wet, lasthumid, lasttemp, lastvoc
     try:
         humidity = round(bme680.humidity, 1)
         lasthumid = humidity
@@ -303,7 +303,7 @@ def local_sensor_record():
     Read all sensors and append a timestamped entry to today's JSON log file.
     Creates the file from scratch if it doesn't exist yet.
     """
-    global aiword, avg_wet
+    global aiword, avg_wet, lasthumid, lasttemp, lastvoc
     try:
         humidity = round(bme680.humidity, 1)
         lasthumid = humidity
@@ -352,7 +352,7 @@ def local_sensor_record():
             entry = {
                 "Time" : get_time_information(),
                 "Humidity" : humidity + " %",
-                "Temperature" : + temperature + " °C",
+                "Temperature" : str(temperature) + " °C",
                 "VOC" : voc + " kΩ",
                 "TDS" : TDS + " %",
                 "AI" : avg_wet,
@@ -366,10 +366,10 @@ def local_sensor_record():
             data = []
             entry = {
                 "Time" : get_time_information(),
-                "Humidity" : humidity + " %",
-                "Temperature" : + temperature + " °C",
-                "VOC" : voc + " kΩ",
-                "TDS" : TDS + " %",
+                "Humidity" : str(humidity) + " %",
+                "Temperature" : str(temperature) + " °C",
+                "VOC" : str(voc) + " kΩ",
+                "TDS" : str(TDS) + " %",
                 "AI" : avg_wet,
             }
             data.append(entry)
@@ -464,8 +464,8 @@ def save_all_cameras(folder, timestamp):
         cv2.imwrite(name, resized)
         shutil.move(name, folder + name)
 
-     newphoto = True
-     newfilelist = [folder + f"{timestamp}_cam1.jpg", folder + f"{timestamp}_cam2.jpg", folder + f"{timestamp}_cam3.jpg"]   
+    newphoto = True
+    newfilelist = [folder + f"{timestamp}_cam1.jpg", folder + f"{timestamp}_cam2.jpg", folder + f"{timestamp}_cam3.jpg"]   
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
