@@ -668,6 +668,7 @@ if __name__ == "__main__":
                      if avg_wet == 1:
                           if pumpingstarttime is None:
                                pumpingstarttime = time.now
+                               pump_cycle(pump_modifyer)
                                
 
         def frame_task():
