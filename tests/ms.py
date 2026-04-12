@@ -664,6 +664,11 @@ if __name__ == "__main__":
                     testcheck = ""
                     testtime = None
                     testphotocount = 0
+                else:
+                     if avg_wet == 1:
+                          if pumpingstarttime is None:
+                               pumpingstarttime = time.now
+                               
 
         def frame_task():
             """Continuously grab the latest frame from all 3 cameras into shared variables."""
