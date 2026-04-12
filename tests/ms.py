@@ -124,6 +124,11 @@ pH = AnalogIn(ads, ads1x15.Pin.A3)   # pH sensor
 maxm1 = 1.2558  # Voltage reading in air (dry)
 minm1 = 0.16073 # Voltage reading submerged (wet)
 
+# Variables to hold that last gained sensor value for safety
+lasthumid = None
+lasttemp = None
+lastvoc = None
+
 # --- State Variables ---
 manualphoto = False       # Flag to trigger a one-off manual photo
 previous = time.time()    # Timestamp of last photo
@@ -132,10 +137,12 @@ istest = False            # Whether a test sequence is currently running
 reference = 1             # Reserved for future use
 startingphoto = True      # Forces an immediate photo on first run
 photolistlocation = "TC-HUNCH-Nanolab/webpages/" + module_config + "/photos/photolist.json"
+monitoring_photos_location = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + module_config + "/photos"
 testtime = None           # Timestamp folder name for current test session
 olddelta = None           # Saved delta to restore after a test completes
 newphoto = False          # Flag indicating a new photo was just saved and needs logging
-pump_constant = 5.18      # Base pump run duration in seconds
+test_constant = 2.20      # Base pump run duration in seconds
+newfilelist = []          # List to manage the new files that must be added to the json
 stopper = False           # Stops photo capture when test photo count is reached
 
 # Initialize pump control pin (GPIO D20) as digital output, starts OFF
@@ -146,7 +153,7 @@ pump_pin.value = False
 testcheck = ""            # Tracks which page triggered the test, used to coordinate threads
 testfirstrun = False      # Ensures test initialization only happens once per test
 testphotocount = 0        # Counter for photos taken in the current test
-pump_modifyer = 1         # Multiplier applied to pump_constant for variable pump durations
+pump_modifyer = 1         # Multiplier applied to test_constant for variable pump durations
 
 avg_wet = 0               # Smoothed AI result: 0 = dry, 1 = wet
 aiword = ""               # Human-readable version of avg_wet ("Dry" or "Wet")
@@ -221,11 +228,11 @@ def disable_cache(response):
 
 def pump_cycle(modifyer):
     """
-    Run the pump for (pump_constant * modifyer) seconds.
+    Run the pump for (test_constant * modifyer) seconds.
     Prints remaining time every 0.25s while active.
     """
-    global pump_constant, pump_pin, istest
-    pump_time = pump_constant * modifyer
+    global test_constant, pump_pin, istest
+    pump_time = test_constant * modifyer
     current = time.time()
     end = current + pump_time
     pump_pin.value = True
@@ -343,12 +350,12 @@ def local_sensor_record():
             with open("TC_HUNCH_Nanolab/" + day + ".json", 'r') as f:
                 data = json.load(f)
             entry = {
-                "Time" : get_time_information()
-                "Humidity" : humidity + " %" 
-                "Temperature" : + temperature + " °C"
-                "VOC" : voc + " kΩ"
-                "TDS" : TDS + " %"
-                "AI" : avg_wet
+                "Time" : get_time_information(),
+                "Humidity" : humidity + " %",
+                "Temperature" : + temperature + " °C",
+                "VOC" : voc + " kΩ",
+                "TDS" : TDS + " %",
+                "AI" : avg_wet,
             }
             data.append(entry)
             with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
@@ -358,12 +365,12 @@ def local_sensor_record():
         with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
             data = []
             entry = {
-                "Time" : get_time_information()
-                "Humidity" : humidity + " %" 
-                "Temperature" : + temperature + " °C"
-                "VOC" : voc + " kΩ"
-                "TDS" : TDS + " %"
-                "AI" : avg_wet
+                "Time" : get_time_information(),
+                "Humidity" : humidity + " %",
+                "Temperature" : + temperature + " °C",
+                "VOC" : voc + " kΩ",
+                "TDS" : TDS + " %",
+                "AI" : avg_wet,
             }
             data.append(entry)
             with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
@@ -431,7 +438,7 @@ def video_feed3():
 
 def save_all_cameras(folder, timestamp):
     """Capture and save the latest frame from each active camera to the given folder."""
-    global newestframe, newestframe2, newestframe3, newphoto
+    global newestframe, newestframe2, newestframe3, newphoto, newfilelist
 
     # CAM1
     if newestframe is not None:
@@ -457,7 +464,8 @@ def save_all_cameras(folder, timestamp):
         cv2.imwrite(name, resized)
         shutil.move(name, folder + name)
 
-    newphoto = True
+     newphoto = True
+     newfilelist = [folder + f"{timestamp}_cam1.jpg", folder + f"{timestamp}_cam2.jpg", folder + f"{timestamp}_cam3.jpg"]   
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
@@ -540,7 +548,7 @@ def monitored_photos():
     - Manual one-off photos
     - Updates photolist.json with paths to all saved photos
     """
-    global previous, delta, istest, testtime, startingphoto, photolistlocation, manualphoto, olddelta, newphoto, newestframe, testfirstrun, stopper, testphotocount, testphotogap, monitortime, requestedphotocount
+    global previous, delta, istest, testtime, startingphoto, photolistlocation, manualphoto, olddelta, newphoto, newestframe, testfirstrun, stopper, testphotocount, testphotogap, monitortime, requestedphotocount, newfilelist
     while True:
         if istest == False:
                 current = time.time()
@@ -552,14 +560,9 @@ def monitored_photos():
                 currenttimeget = str(datetime.now())
                 currenttime = currenttimeget.replace(" ", "at")  # Make timestamp filename-safe
                 if delta >= monitortime:  # Take a photo once the monitoring interval has elapsed
-                    save_all_cameras(folder2 + "/", currenttime)
+                    save_all_cameras(monitoring_photos_location + "/", currenttime)
                     delta = 0
                     previous = current
-                    photolocation = 'photos/' + str(testtime) + '/' + str(currenttime)
-                    testphotocount += 1
-                    print("Photos Taken! " + str(testphotocount))
-                    if testphotocount >= requestedphotocount:
-                        stopper = True
                 if olddelta is not None:
                     delta = olddelta  # Restore pre-test delta when returning to monitoring mode
                     olddelta = None
@@ -574,24 +577,27 @@ def monitored_photos():
                 testtime = str(datetime.now())
                 testtime = testtime.replace(" ", "at")
                 testfirstrun = False
-            folder2 = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + str(module_config) + "/photos/" + testtime
-            os.makedirs(folder2, exist_ok=True)
+            test_folder = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + str(module_config) + "/photos/" + testtime
+            os.makedirs(test_folder, exist_ok=True)
             dataset = "testphotos"
             current = time.time()
             delta = current - previous
             currenttimeget = str(datetime.now())
             currenttime = currenttimeget.replace(" ", "at")
             if delta >= testphotogap:
-                if testphotocount == requestedphotocount:
+               save_all_cameras(test_folder + "/", currenttime)
+               previous = current
+               testphotocount += 1
+               if testphotocount == requestedphotocount:
                     stopper = True  # Stop capturing once target count is reached
-            if delta >= 5.18:
-                istest = False  # Safety timeout: exit test mode if pump cycle time elapses without completion
+               if delta >= pump_constant:
+                    istest = False  # Safety timeout: exit test mode if pump cycle time elapses without completion
 
         if manualphoto == True:
-            # Reset photo timing so the next scheduled photo captures immediately
-            olddelta = delta
-            startingphoto = True
-            manualphoto = False
+               currenttimeget = str(datetime.now())
+               currenttime = currenttimeget.replace(" ", "at")  # Make timestamp filename-safe
+               save_all_cameras(monitoring_photos_location + "/", currenttime)
+               manualphoto = False
 
         if newphoto == True:
                 # Append the new photo path to photolist.json for the web UI
@@ -600,13 +606,14 @@ def monitored_photos():
                              data = json.load(f)
                         if dataset not in data:
                              data[dataset] = []
-                        data[dataset].append(photolocation)
+                        for photos in newfilelist:
+                             data[dataset].append(photos)
                         with open(photolistlocation, 'w') as f:
                              json.dump(data, f, indent=4)
                 except FileNotFoundError:
                         # Create photolist.json from scratch if it doesn't exist yet
                         with open('photolist.json', 'w') as f:
-                             json.dump({dataset: [photolocation]}, f, indent = 4)
+                             json.dump({dataset: newfilelist}, f, indent = 4)
                         shutil.move('/home/nanolab/photolist.json', photolistlocation)
                 newphoto = False
 
