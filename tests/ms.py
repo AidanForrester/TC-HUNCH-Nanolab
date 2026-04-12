@@ -351,10 +351,10 @@ def local_sensor_record():
                 data = json.load(f)
             entry = {
                 "Time" : get_time_information(),
-                "Humidity" : humidity + " %",
+                "Humidity" : str(humidity) + " %",
                 "Temperature" : str(temperature) + " °C",
-                "VOC" : voc + " kΩ",
-                "TDS" : TDS + " %",
+                "VOC" : str(voc) + " kΩ",
+                "TDS" : str(TDS) + " %",
                 "AI" : avg_wet,
             }
             data.append(entry)
@@ -383,6 +383,7 @@ def video_stream():
     """
     global newestframe
     while True:
+         if newestframe is not None:  
             frame = newestframe.copy()
             resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
             ret, buffer = cv2.imencode('.jpg', resized_frame)
@@ -398,6 +399,7 @@ def video_stream2():
     """
     global newestframe2
     while True:
+         if newestframe2 is not None:        
             frame = newestframe2.copy()
             resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
             ret, buffer = cv2.imencode('.jpg', resized_frame)
@@ -413,6 +415,7 @@ def video_stream3():
     """
     global newestframe3
     while True:
+         if newestframe3 is not None:  
             frame = newestframe3.copy()
             resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
             ret, buffer = cv2.imencode('.jpg', resized_frame)
@@ -517,7 +520,8 @@ def controls():
     - starttest: begins a timed pump + photo test sequence
     """
     global growmode, viewmode, manualphoto, istest, testcheck
-    if 'growmode' in request.form:
+     returnpage = 'dashpage'
+     if 'growmode' in request.form:
          # Red LEDs for chlorophyll-a, blue LEDs for chlorophyll-b absorption
          pixels[1] = (255, 0, 0)
          pixels[4] = (255, 0, 0)
@@ -590,12 +594,13 @@ def monitored_photos():
                testphotocount += 1
                if testphotocount == requestedphotocount:
                     stopper = True  # Stop capturing once target count is reached
-               if delta >= pump_constant:
+               if delta >= test_constant:
                     istest = False  # Safety timeout: exit test mode if pump cycle time elapses without completion
 
         if manualphoto == True:
                currenttimeget = str(datetime.now())
                currenttime = currenttimeget.replace(" ", "at")  # Make timestamp filename-safe
+               dataset = "photos"
                save_all_cameras(monitoring_photos_location + "/", currenttime)
                manualphoto = False
 
