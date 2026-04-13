@@ -157,7 +157,8 @@ pump_modifyer = 1         # Multiplier applied to test_constant for variable pum
 
 avg_wet = 0               # Smoothed AI result: 0 = dry, 1 = wet
 aiword = ""               # Human-readable version of avg_wet ("Dry" or "Wet")
-
+pumpcooldown = False      # Auto-Pumping Cooldown to prevent overpumping
+pumpingstarttime = None      # Auto-Pumping timing variable to manage pumpinmg interval - initialized to None before first water
 # --- Functions ---
 
 def obtain_frame():
@@ -520,8 +521,8 @@ def controls():
     - starttest: begins a timed pump + photo test sequence
     """
     global growmode, viewmode, manualphoto, istest, testcheck
-     returnpage = 'dashpage'
-     if 'growmode' in request.form:
+    returnpage = 'dashpage'
+    if 'growmode' in request.form:
          # Red LEDs for chlorophyll-a, blue LEDs for chlorophyll-b absorption
          pixels[1] = (255, 0, 0)
          pixels[4] = (255, 0, 0)
@@ -656,7 +657,7 @@ if __name__ == "__main__":
             Watch for a test trigger from the web UI. When detected,
             runs a pump cycle and resets test state for the next run.
             """
-            global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime
+            global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime, pumpcooldown, pumpingstarttime
             while True:
                 if testcheck == "graphpage":
                     testfirstrun = True
@@ -665,11 +666,17 @@ if __name__ == "__main__":
                     testtime = None
                     testphotocount = 0
                 else:
-                     if avg_wet == 1:
-                          if pumpingstarttime is None:
-                               pumpingstarttime = time.now
-                               pump_cycle(pump_modifyer)
-                               
+                     if avg_wet == 0 and pumpcooldown == False: #If the plant needs water and the plant is not currently in a cycle
+                          pumpingstarttime = time.time() #Take a baseline time
+                          while time.time() - pumpingstarttime <= 2.5: #For 2.5 seconds
+                               pump_pin.value = True #Turn the pump on
+                               time.sleep(0.5)
+                          pump_pin.value = False #Turn the pump off
+                          pumpcooldown = True #Start a cooldown to prevent race conditions while the water travels
+                     if time.time() - pumpingstarttime >= 5 or pumpingstarttime is None: #End the cooldown after 5 Seconds
+                         pumpcooldown = False
+               time.sleep(0.25) 
+               
 
         def frame_task():
             """Continuously grab the latest frame from all 3 cameras into shared variables."""
