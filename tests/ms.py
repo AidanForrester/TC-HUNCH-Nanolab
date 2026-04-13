@@ -666,7 +666,7 @@ if __name__ == "__main__":
                     testtime = None
                     testphotocount = 0
                 else:
-                     if avg_wet == 0 and pumpcooldown == False: #If the plant needs water and the plant is not currently in a cycle
+                     if avg_wet == 0 and moist1 >= 50 and pumpcooldown == False: #If the plant needs water and the plant is not currently in a cycle
                           pumpingstarttime = time.time() #Take a baseline time
                           while time.time() - pumpingstarttime <= 2.5: #For 2.5 seconds
                                pump_pin.value = True #Turn the pump on
