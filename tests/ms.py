@@ -673,8 +673,9 @@ if __name__ == "__main__":
                                time.sleep(0.5)
                           pump_pin.value = False #Turn the pump off
                           pumpcooldown = True #Start a cooldown to prevent race conditions while the water travels
-                     if pumpingstarttime is None or time.time() - pumpingstarttime >= 5: #End the cooldown after 5 Seconds
+                     if pumpingstarttime is not None or time.time() - pumpingstarttime >= 5: #End the cooldown after 5 Seconds
                          pumpcooldown = False
+                         pumpingstarttime = None
                time.sleep(0.25) 
                
 
