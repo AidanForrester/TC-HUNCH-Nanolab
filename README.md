@@ -2,7 +2,7 @@
 
 ## Instalation Instructions
 
-This module is written in Python 3.11.9 and HTML/CSS. The project must not use a new python version for compatibility with the Tesorflow Lite framework. Before completing the following instructions, ensure Python version 3.11.X is installed on the pi, even if a different version came with PI OS.
+This module is written in Python 3.11.9 and HTML/CSS/JAVASCRIPT. The project must not use a new python version for compatibility with the Tesorflow Lite framework. Before completing the following instructions, ensure Python version 3.11.X is installed on the pi, even if a different version came with PI OS.
 
 1. Clone this Repo using `git clone https://github.com/AidanForrester/TC-HUNCH-Nanolab.git/`
 2. Open the project using `cd TC-HUNCH-Nanolab`
