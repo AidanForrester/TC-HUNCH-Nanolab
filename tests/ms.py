@@ -124,6 +124,9 @@ pH = AnalogIn(ads, ads1x15.Pin.A3)   # pH sensor
 maxm1 = 1.2558  # Voltage reading in air (dry)
 minm1 = 0.16073 # Voltage reading submerged (wet)
 
+# Moisture sensor % reading for watering logic
+moist1 = 0
+
 # Variables to hold that last gained sensor value for safety
 lasthumid = None
 lasttemp = None
@@ -257,7 +260,7 @@ def sensor_data():
     Flask endpoint that reads all sensors and returns a JSON payload.
     Falls back to last known values if a sensor read fails.
     """
-    global aiword, avg_wet, lasthumid, lasttemp, lastvoc
+    global aiword, avg_wet, lasthumid, lasttemp, lastvoc, moist1
     try:
         humidity = round(bme680.humidity, 1)
         lasthumid = humidity
@@ -656,8 +659,13 @@ if __name__ == "__main__":
             """
             Watch for a test trigger from the web UI. When detected,
             runs a pump cycle and resets test state for the next run.
+
+            While not in a test setting, watch the moisture sensor and 
+            AI vision model. If the plant needs watering, pump for 2.5
+            seconds and then watch over for 5 seconds to let water travel.
+            This cycle repeats as the plane is in need of water.
             """
-            global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime, pumpcooldown, pumpingstarttime
+            global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime, pumpcooldown, pumpingstarttime, moist1
             while True:
                 if testcheck == "graphpage":
                     testfirstrun = True
@@ -673,10 +681,10 @@ if __name__ == "__main__":
                                time.sleep(0.5)
                           pump_pin.value = False #Turn the pump off
                           pumpcooldown = True #Start a cooldown to prevent race conditions while the water travels
-                     if pumpingstarttime is not None or time.time() - pumpingstarttime >= 5: #End the cooldown after 5 Seconds
+                     if time.time() - pumpingstarttime >= 5: #End the cooldown after 5 Seconds
                          pumpcooldown = False
                          pumpingstarttime = None
-               time.sleep(0.25) 
+                time.sleep(0.25) 
                
 
         def frame_task():
