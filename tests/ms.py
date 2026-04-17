@@ -66,7 +66,7 @@ except Exception as e:
      print("Please Configure Settings")
 
 # Initialize NeoPixel LED strip (20 LEDs on GPIO D18) and set to warm white for viewing
-pixelcount = 20
+pixelcount = 16
 pixels = neopixel.NeoPixel(board.D18, pixelcount, brightness=bright, auto_write=False)
 pixels.fill((255, 200, 180))
 pixels.show()
@@ -527,12 +527,10 @@ def controls():
     returnpage = 'dashpage'
     if 'growmode' in request.form:
          # Red LEDs for chlorophyll-a, blue LEDs for chlorophyll-b absorption
-         pixels[1] = (255, 0, 0)
-         pixels[4] = (255, 0, 0)
-         pixels[7] = (255, 0, 0)
-         pixels[2] = (0, 0, 255)
-         pixels[8] = (0, 0, 255)
-         pixels[10] = (0, 0, 255)
+         pixels[2] = (255, 0, 0)
+         pixels[6] = (255, 0, 0)
+         pixels[3] = (0, 0, 255)
+         pixels[7] = (0, 0, 255)
          pixels.show()
          returnpage = 'dashpage'
     if 'viewmode' in request.form:
