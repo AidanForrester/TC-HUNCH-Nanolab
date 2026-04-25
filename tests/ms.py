@@ -3,7 +3,7 @@ import digitalio
 import board
 import os
 import adafruit_bme680
-from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
+from adafruit_ads1x15 import ADS1015, AnalogIn, ads1x15
 import cv2
 
 import neopixel
@@ -101,21 +101,51 @@ app = Flask(__name__, template_folder='../webpages/' + module_config.strip())
 WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../webpages/" + module_config.strip())
 WEB_DIR = os.path.abspath(WEB_DIR)
 
+def find_camera_index(usb_port):
+    result = subprocess.run(['v4l2-ctl', '--list-devices'], capture_output=True, text=True)
+    lines = result.stdout.split('\n')
+    for i, line in enumerate(lines):
+        if usb_port in line:
+            # Return the first /dev/videoX after this line
+            for j in range(i+1, len(lines)):
+                if '/dev/video' in lines[j]:
+                    return int(lines[j].strip().replace('/dev/video', ''))
+    return -1
+
+cam1_idx = find_camera_index('usb-1.4')
+cam2_idx = find_camera_index('usb-1.2')
+cam3_idx = find_camera_index('usb-1.3')
+print(f"cam1_idx: {cam1_idx}, cam2_idx: {cam2_idx}, cam3_idx: {cam3_idx}")
+
 # Initialize camera captures (3 cameras) and set frame buffer to 1 to always get the freshest frame
-video_cam1 = cv2.VideoCapture(0)
-video_cam1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-video_cam2 = cv2.VideoCapture(1)
-video_cam2.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-video_cam3 = cv2.VideoCapture(2)
-video_cam3.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+video_cam1 = cv2.VideoCapture(cam1_idx, cv2.CAP_V4L2) if cam1_idx != -1 else None
+if video_cam1 is not None:
+    video_cam1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    video_cam1.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+    video_cam1.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    video_cam1.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+
+video_cam2 = cv2.VideoCapture(cam2_idx, cv2.CAP_V4L2) if cam2_idx != -1 else None
+if video_cam2 is not None:
+    video_cam2.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    video_cam2.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+    video_cam2.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    video_cam2.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+
+video_cam3 = cv2.VideoCapture(cam3_idx, cv2.CAP_V4L2) if cam3_idx != -1 else None
+if video_cam3 is not None:
+    video_cam3.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    video_cam3.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+    video_cam3.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    video_cam3.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 new_width = 640
 new_height = 480
 newestframe = None   # Latest frame from cam1, updated by frame_task thread
 newestframe2 = None  # Latest frame from cam2, updated by frame_task thread
 newestframe3 = None  # Latest frame from cam3, updated by frame_task thread
 
-# Initialize ADS1115 ADC (I2C address 0x48) and map analog channels to sensors
-ads = ADS1115(i2c_bus, address=0x48)
+# Initialize ADS1015 ADC (I2C address 0x48) and map analog channels to sensors
+ads = ADS1015(i2c_bus, address=0x48)
 m1 = AnalogIn(ads, ads1x15.Pin.A0)   # Soil moisture sensor
 tds = AnalogIn(ads, ads1x15.Pin.A2)  # TDS (total dissolved solids) sensor
 pH = AnalogIn(ads, ads1x15.Pin.A3)   # pH sensor
@@ -700,7 +730,7 @@ if __name__ == "__main__":
                 else:
                     time.sleep(0.02)
                 frame3 = obtain_frame3()
-                if frame3 is not None:
+                if frame3 is not None and video_cam3.isOpened():
                     newestframe3 = frame3
                 else:
                     time.sleep(0.02)
