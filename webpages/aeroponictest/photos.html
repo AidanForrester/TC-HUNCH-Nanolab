@@ -164,6 +164,7 @@
    const testexisting = new Set(
          Array.from(testgallery.querySelectorAll("img")).map(img => img.src)
    );
+if (!data.testphotos) return;
 const testphotos = data.testphotos.slice().reverse();
 testphotos.forEach(path => {
      if (!testexisting.has(path)) {
@@ -175,7 +176,7 @@ testphotos.forEach(path => {
  })
 }
 loadtestgallery()
-setinterval(loadtestgallery, 5000)  
+setInterval(loadtestgallery, 5000)  
 </script>
 <h2>6 Hourly Photos</h2>
 <div id="gallery"></div>
@@ -188,7 +189,8 @@ setinterval(loadtestgallery, 5000)
     const existing = new Set(
          Array.from(gallery.querySelectorAll("img")).map(img => img.src)
     );  
- const photos = data.photos.slice().reverse();
+if (!data.photos) return;
+const photos = data.photos.slice().reverse();
  photos.forEach(path => {
      if (!existing.has(path)) {
         const img = document.createElement("img");
@@ -199,7 +201,7 @@ setinterval(loadtestgallery, 5000)
     })
 }
 loadGallery()
-setinterval(loadGallery, 300000)
+setInterval(loadGallery, 300000)
 </script>
 </main>
 </body>
