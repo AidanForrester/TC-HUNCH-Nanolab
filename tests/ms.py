@@ -122,22 +122,22 @@ video_cam1 = cv2.VideoCapture(cam1_idx, cv2.CAP_V4L2) if cam1_idx != -1 else Non
 if video_cam1 is not None:
     video_cam1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     video_cam1.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-    video_cam1.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-    video_cam1.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+    video_cam1.set(cv2.CAP_PROP_FRAME_WIDTH, 480)
+    video_cam1.set(cv2.CAP_PROP_FRAME_HEIGHT, 320)
 
 video_cam2 = cv2.VideoCapture(cam2_idx, cv2.CAP_V4L2) if cam2_idx != -1 else None
 if video_cam2 is not None:
     video_cam2.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     video_cam2.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-    video_cam2.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-    video_cam2.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+    video_cam2.set(cv2.CAP_PROP_FRAME_WIDTH, 480)
+    video_cam2.set(cv2.CAP_PROP_FRAME_HEIGHT, 320)
 
 video_cam3 = cv2.VideoCapture(cam3_idx, cv2.CAP_V4L2) if cam3_idx != -1 else None
 if video_cam3 is not None:
     video_cam3.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     video_cam3.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-    video_cam3.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    video_cam3.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    video_cam3.set(cv2.CAP_PROP_FRAME_WIDTH, 480)
+    video_cam3.set(cv2.CAP_PROP_FRAME_HEIGHT, 320)
 new_width = 640
 new_height = 480
 newestframe = None   # Latest frame from cam1, updated by frame_task thread
@@ -191,7 +191,7 @@ pump_modifyer = 1         # Multiplier applied to test_constant for variable pum
 avg_wet = 0               # Smoothed AI result: 0 = dry, 1 = wet
 aiword = ""               # Human-readable version of avg_wet ("Dry" or "Wet")
 pumpcooldown = False      # Auto-Pumping Cooldown to prevent overpumping
-pumpingstarttime = None      # Auto-Pumping timing variable to manage pumpinmg interval - initialized to None before first water
+pumpingstarttime = 0      # Auto-Pumping timing variable to manage pumpinmg interval - initialized to 0 before first water
 # --- Functions ---
 
 def obtain_frame():
@@ -718,31 +718,40 @@ if __name__ == "__main__":
         def frame_task():
             global newestframe
             while True:
-                frame = obtain_frame()
-                if frame is not None and video_cam1.isOpened():
-                    newestframe = frame
-                    time.sleep(0.02)
+                if video_cam1 is None:
+                    time.sleep(.02)
                 else:
-                    time.sleep(0.02)
+                    frame = obtain_frame()
+                    if frame is not None and video_cam1.isOpened():
+                        newestframe = frame
+                        time.sleep(0.02)
+                    else:
+                        time.sleep(0.02)
         def frame_task2():
             global newestframe2
             while True:
-                frame2 = obtain_frame2()
-                if frame2 is not None and video_cam2.isOpened():
-                    newestframe2 = frame2
-                    time.sleep(0.02)
+                if video_cam2 is None:
+                    time.sleep(.02)
                 else:
-                    time.sleep(0.02)
+                    frame2 = obtain_frame2()
+                    if frame2 is not None and video_cam2.isOpened():
+                        newestframe2 = frame2
+                        time.sleep(0.02)
+                    else:
+                        time.sleep(0.02)
 
         def frame_task3():
             global newestframe3
             while True:
-                frame3 = obtain_frame3()
-                if frame3 is not None and video_cam3.isOpened():
-                    newestframe3 = frame3
-                    time.sleep(0.02)
+                if video_cam3 is None:
+                    time.sleep(.02)
                 else:
-                    time.sleep(0.02)
+                    frame3 = obtain_frame3()
+                    if frame3 is not None and video_cam3.isOpened():
+                        newestframe3 = frame3
+                        time.sleep(0.02)
+                    else:
+                        time.sleep(0.02)
 
         # Create and start all background threads
         sensor_thread = threading.Thread(target=background_sensor_task)
