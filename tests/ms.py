@@ -714,24 +714,33 @@ if __name__ == "__main__":
                          pumpingstarttime = None
                 time.sleep(0.25) 
                
-
+        #Continuously grab the latest frame from all 3 cameras into shared variables.
         def frame_task():
-            """Continuously grab the latest frame from all 3 cameras into shared variables."""
-            global newestframe, newestframe2, newestframe3
+            global newestframe
             while True:
                 frame = obtain_frame()
-                if frame is not None:
+                if frame is not None and video_cam1.isOpened():
                     newestframe = frame
+                    time.sleep(0.02)
                 else:
                     time.sleep(0.02)
+        def frame_task2():
+            global newestframe2
+            while True:
                 frame2 = obtain_frame2()
-                if frame2 is not None:
+                if frame2 is not None and video_cam2.isOpened():
                     newestframe2 = frame2
+                    time.sleep(0.02)
                 else:
                     time.sleep(0.02)
+
+        def frame_task3():
+            global newestframe3
+            while True:
                 frame3 = obtain_frame3()
                 if frame3 is not None and video_cam3.isOpened():
                     newestframe3 = frame3
+                    time.sleep(0.02)
                 else:
                     time.sleep(0.02)
 
@@ -741,8 +750,12 @@ if __name__ == "__main__":
         root_ai_thread = threading.Thread(target=root_ai_task)
         test_thread = threading.Thread(target=test_task)
         frame_thread = threading.Thread(target=frame_task)
+        frame_thread2 = threading.Thread(target=frame_task2)
+        frame_thread3 = threading.Thread(target=frame_task3)
 
         frame_thread.start()   # Start camera capture first so other threads have frames to work with
+        frame_thread2.start()
+        frame_thread3.start()
         sensor_thread.start()
         photo_thread.start()
         root_ai_thread.start()
