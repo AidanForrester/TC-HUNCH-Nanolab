@@ -381,7 +381,7 @@ def local_sensor_record():
     # Use today's date as the JSON filename (e.g. "2026-04-28.json")
     day = str(datetime.now().date())
     try:
-            with open("TC_HUNCH_Nanolab/" + day + ".json", 'r') as f:
+            with open("TC-HUNCH-Nanolab/" + day + ".json", 'r') as f:
                 data = json.load(f)
             entry = {
                 "Time" : get_time_information(),
@@ -392,11 +392,10 @@ def local_sensor_record():
                 "AI" : avg_wet,
             }
             data.append(entry)
-            with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
+            with open("TC-HUNCH-Nanolab/" + day + ".json", 'w') as f:
                     json.dump(data, f, indent=4)
     except FileNotFoundError:
         # Create day's .json from scratch if it doesn't exist yet
-        with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
             data = []
             entry = {
                 "Time" : get_time_information(),
@@ -407,7 +406,7 @@ def local_sensor_record():
                 "AI" : avg_wet,
             }
             data.append(entry)
-            with open("TC_HUNCH_Nanolab/" + day + ".json", 'w') as f:
+            with open("TC-HUNCH-Nanolab/" + day + ".json", 'w') as f:
                     json.dump(data, f, indent=4)
 
 def video_stream():
@@ -473,36 +472,35 @@ def video_feed3():
     """Streams live MJPEG video from cam3."""
     return Response(video_stream3(), mimetype= 'multipart/x-mixed-replace; boundary=frame')
 
-def save_all_cameras(folder, timestamp):
+def save_all_cameras(folder, timestamp, prefix=""):
     """Capture and save the latest frame from each active camera to the given folder."""
     global newestframe, newestframe2, newestframe3, newphoto, newfilelist
 
     # CAM1
-    if newestframe is not None:
+    if video_cam1 is not None and newestframe is not None:
         frame = newestframe.copy()
         resized = cv2.resize(frame, (new_width, new_height))
         name = f"{timestamp}_cam1.jpg"
-        cv2.imwrite(name, resized)
-        shutil.move(name, folder + name)
+        cv2.imwrite(folder + name, resized)
+        newfilelist.append(prefix + "/" + f"{timestamp}_cam1.jpg")
 
     # CAM2
-    if newestframe2 is not None:
+    if video_cam2 is not None and newestframe2 is not None:
         frame = newestframe2.copy()
         resized = cv2.resize(frame, (new_width, new_height))
         name = f"{timestamp}_cam2.jpg"
-        cv2.imwrite(name, resized)
-        shutil.move(name, folder + name)
+        cv2.imwrite(folder + name, resized)
+        newfilelist.append(prefix + "/" + f"{timestamp}_cam2.jpg")
 
     # CAM3
-    if newestframe3 is not None:
+    if video_cam3 is not None and newestframe3 is not None:
         frame = newestframe3.copy()
         resized = cv2.resize(frame, (new_width, new_height))
         name = f"{timestamp}_cam3.jpg"
-        cv2.imwrite(name, resized)
-        shutil.move(name, folder + name)
+        cv2.imwrite(folder + name, resized)
+        newfilelist.append(prefix + "/" + f"{timestamp}_cam3.jpg")
 
     newphoto = True
-    newfilelist = [folder + f"{timestamp}_cam1.jpg", folder + f"{timestamp}_cam2.jpg", folder + f"{timestamp}_cam3.jpg"]   
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
@@ -595,6 +593,7 @@ def monitored_photos():
                 dataset = "photos"
                 currenttimeget = str(datetime.now())
                 currenttime = currenttimeget.replace(" ", "at")  # Make timestamp filename-safe
+                currenttime = currenttimeget.replace(":", "-")
                 if delta >= monitortime:  # Take a photo once the monitoring interval has elapsed
                     save_all_cameras(monitoring_photos_location + "/", currenttime)
                     delta = 0
@@ -604,6 +603,8 @@ def monitored_photos():
                     olddelta = None
 
         if istest == True and stopper == False:
+            if testtime is None:
+                testtime = str(datetime.now()).replace(" ", "at").replace(":", "-")
             if testfirstrun == True:
                 # Initialize test: save current delta, reset timer, create timestamped folder
                 olddelta = delta
@@ -620,8 +621,9 @@ def monitored_photos():
             delta = current - previous
             currenttimeget = str(datetime.now())
             currenttime = currenttimeget.replace(" ", "at")
+            currenttime = currenttimeget.replace(":", "-")
             if delta >= testphotogap:
-               save_all_cameras(test_folder + "/", currenttime)
+               save_all_cameras(test_folder + "/", currenttime, testtime)
                previous = current
                testphotocount += 1
                if testphotocount == requestedphotocount:
@@ -632,6 +634,7 @@ def monitored_photos():
         if manualphoto == True:
                currenttimeget = str(datetime.now())
                currenttime = currenttimeget.replace(" ", "at")  # Make timestamp filename-safe
+               currenttime = currenttimeget.replace(":", "-")
                dataset = "photos"
                save_all_cameras(monitoring_photos_location + "/", currenttime)
                manualphoto = False
@@ -711,7 +714,7 @@ if __name__ == "__main__":
                           pumpcooldown = True #Start a cooldown to prevent race conditions while the water travels
                      if time.time() - pumpingstarttime >= 5: #End the cooldown after 5 Seconds
                          pumpcooldown = False
-                         pumpingstarttime = None
+                         pumpingstarttime = 0
                 time.sleep(0.25) 
                
         #Continuously grab the latest frame from all 3 cameras into shared variables.
