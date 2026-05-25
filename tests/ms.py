@@ -569,6 +569,7 @@ def controls():
          manualphoto = True
          returnpage = 'photopage'
     if 'starttest' in request.form:
+         testfirstrun = True
          istest = True
          returnpage = 'graphpage'
     testcheck = returnpage
@@ -656,6 +657,7 @@ def monitored_photos():
                              json.dump({dataset: newfilelist}, f, indent = 4)
                         shutil.move('/home/nanolab/photolist.json', photolistlocation)
                 newphoto = False
+             newfilelist = []
 
 @app.route('/photolist.json')
 def photo_json():
@@ -699,7 +701,6 @@ if __name__ == "__main__":
             global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime, pumpcooldown, pumpingstarttime, moist1
             while True:
                 if testcheck == "graphpage":
-                    testfirstrun = True
                     pump_cycle(pump_modifyer)
                     testcheck = ""
                     testtime = None
