@@ -551,7 +551,7 @@ def controls():
     - manualphoto: triggers an immediate one-off photo
     - starttest: begins a timed pump + photo test sequence
     """
-    global growmode, viewmode, manualphoto, istest, testcheck
+    global growmode, viewmode, manualphoto, istest, testcheck, testfirstrun
     returnpage = 'dashpage'
     if 'growmode' in request.form:
          # Red LEDs for chlorophyll-a, blue LEDs for chlorophyll-b absorption
