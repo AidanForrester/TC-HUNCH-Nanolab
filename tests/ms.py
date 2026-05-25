@@ -657,7 +657,7 @@ def monitored_photos():
                              json.dump({dataset: newfilelist}, f, indent = 4)
                         shutil.move('/home/nanolab/photolist.json', photolistlocation)
                 newphoto = False
-             newfilelist = []
+                newfilelist = []
 
 @app.route('/photolist.json')
 def photo_json():
