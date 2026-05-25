@@ -174,7 +174,7 @@ monitoring_photos_location = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + module
 testtime = None           # Timestamp folder name for current test session
 olddelta = None           # Saved delta to restore after a test completes
 newphoto = False          # Flag indicating a new photo was just saved and needs logging
-test_constant = 2.20      # Base pump run duration in seconds
+test_constant = 2.20+0.78 # Base pump run duration in seconds PLUS OFFSET
 newfilelist = []          # List to manage the new files that must be added to the json
 stopper = False           # Stops photo capture when test photo count is reached
 
@@ -551,7 +551,7 @@ def controls():
     - manualphoto: triggers an immediate one-off photo
     - starttest: begins a timed pump + photo test sequence
     """
-    global growmode, viewmode, manualphoto, istest, testcheck
+    global growmode, viewmode, manualphoto, istest, testcheck, delta, previous, testtime, stopper, testphotocount
     returnpage = 'dashpage'
     if 'growmode' in request.form:
          # Red LEDs for chlorophyll-a, blue LEDs for chlorophyll-b absorption
@@ -569,8 +569,13 @@ def controls():
          manualphoto = True
          returnpage = 'photopage'
     if 'starttest' in request.form:
+         testtime = None
+         stopper = False
+         testphotocount = 0
          istest = True
          returnpage = 'graphpage'
+         delta = 0                  # ← reset so the huge monitoring delta is gone
+         previous = time.time()     # ← fresh start for the test timer
     testcheck = returnpage
     return redirect(url_for(returnpage))
 
@@ -611,8 +616,6 @@ def monitored_photos():
                 delta = 0
                 stopper = False
                 previous = time.time()
-                testtime = str(datetime.now())
-                testtime = testtime.replace(" ", "at")
                 testfirstrun = False
             test_folder = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + str(module_config) + "/photos/" + testtime
             os.makedirs(test_folder, exist_ok=True)
@@ -700,11 +703,10 @@ if __name__ == "__main__":
             global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime, pumpcooldown, pumpingstarttime, moist1
             while True:
                 if testcheck == "graphpage":
+                    testphotocount = 0
                     testfirstrun = True
                     pump_cycle(pump_modifyer)
                     testcheck = ""
-                    testtime = None
-                    testphotocount = 0
                 else:
                      if avg_wet == 0 and moist1 >= 50 and pumpcooldown == False: #If the plant needs water and the plant is not currently in a cycle
                           pumpingstarttime = time.time() #Take a baseline time
