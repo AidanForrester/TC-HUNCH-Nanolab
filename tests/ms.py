@@ -551,7 +551,7 @@ def controls():
     - manualphoto: triggers an immediate one-off photo
     - starttest: begins a timed pump + photo test sequence
     """
-    global growmode, viewmode, manualphoto, istest, testcheck, testfirstrun
+    global growmode, viewmode, manualphoto, istest, testcheck
     returnpage = 'dashpage'
     if 'growmode' in request.form:
          # Red LEDs for chlorophyll-a, blue LEDs for chlorophyll-b absorption
@@ -569,7 +569,6 @@ def controls():
          manualphoto = True
          returnpage = 'photopage'
     if 'starttest' in request.form:
-         testfirstrun = True
          istest = True
          returnpage = 'graphpage'
     testcheck = returnpage
@@ -701,6 +700,7 @@ if __name__ == "__main__":
             global pump_modifyer, testcheck, testfirstrun, testphotocount, testtime, pumpcooldown, pumpingstarttime, moist1
             while True:
                 if testcheck == "graphpage":
+                    testfirstrun = True
                     pump_cycle(pump_modifyer)
                     testcheck = ""
                     testtime = None
