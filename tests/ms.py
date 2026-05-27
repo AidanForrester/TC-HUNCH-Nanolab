@@ -82,7 +82,7 @@ except Exception as e:
 # Read total number of photos to take per test session from config (line 5)
 try:
      line5 = linecache.getline("/home/nanolab/config.txt", 5)
-     requestedphotocount = float(line5.strip())
+     requestedphotocount = int(line5.strip())
 except Exception as e:
      requestedphotocount = 10  # Default to 10 photos per test
      print("Please Configure Settings")
@@ -122,22 +122,22 @@ video_cam1 = cv2.VideoCapture(cam1_idx, cv2.CAP_V4L2) if cam1_idx != -1 else Non
 if video_cam1 is not None:
     video_cam1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     video_cam1.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-    video_cam1.set(cv2.CAP_PROP_FRAME_WIDTH, 480)
-    video_cam1.set(cv2.CAP_PROP_FRAME_HEIGHT, 320)
+    video_cam1.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    video_cam1.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
 
 video_cam2 = cv2.VideoCapture(cam2_idx, cv2.CAP_V4L2) if cam2_idx != -1 else None
 if video_cam2 is not None:
     video_cam2.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-    video_cam2.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-    video_cam2.set(cv2.CAP_PROP_FRAME_WIDTH, 480)
-    video_cam2.set(cv2.CAP_PROP_FRAME_HEIGHT, 320)
+    video_cam2.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
+    video_cam2.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    video_cam2.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 
 video_cam3 = cv2.VideoCapture(cam3_idx, cv2.CAP_V4L2) if cam3_idx != -1 else None
 if video_cam3 is not None:
     video_cam3.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-    video_cam3.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-    video_cam3.set(cv2.CAP_PROP_FRAME_WIDTH, 480)
-    video_cam3.set(cv2.CAP_PROP_FRAME_HEIGHT, 320)
+    video_cam3.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
+    video_cam3.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    video_cam3.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 new_width = 640
 new_height = 480
 newestframe = None   # Latest frame from cam1, updated by frame_task thread
@@ -174,7 +174,7 @@ monitoring_photos_location = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + module
 testtime = None           # Timestamp folder name for current test session
 olddelta = None           # Saved delta to restore after a test completes
 newphoto = False          # Flag indicating a new photo was just saved and needs logging
-test_constant = 2.20+0.78 # Base pump run duration in seconds PLUS OFFSET
+test_constant = 2.98 # Base pump run duration in seconds PLUS OFFSET (2.20+0.78)
 newfilelist = []          # List to manage the new files that must be added to the json
 stopper = False           # Stops photo capture when test photo count is reached
 
@@ -424,6 +424,7 @@ def video_stream():
 
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+            time.sleep(0.033)
 
 def video_stream2():
     """
@@ -440,6 +441,7 @@ def video_stream2():
 
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+            time.sleep(0.033)
 
 def video_stream3():
     """
@@ -456,6 +458,7 @@ def video_stream3():
 
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+            time.sleep(0.033)
 
 @app.route('/video_feed_cam1')
 def video_feed():
@@ -614,7 +617,6 @@ def monitored_photos():
                 # Initialize test: save current delta, reset timer, create timestamped folder
                 olddelta = delta
                 delta = 0
-                stopper = False
                 previous = time.time()
                 testfirstrun = False
             test_folder = "/home/nanolab/TC-HUNCH-Nanolab/webpages/" + str(module_config) + "/photos/" + testtime
@@ -628,8 +630,8 @@ def monitored_photos():
             if delta >= testphotogap:
                save_all_cameras(test_folder + "/", currenttime, testtime)
                previous = current
-               testphotocount += 1
-               if testphotocount == requestedphotocount:
+               testphotocount = testphotocount + 1
+               if testphotocount >= requestedphotocount:
                     stopper = True  # Stop capturing once target count is reached
                if delta >= test_constant:
                     istest = False  # Safety timeout: exit test mode if pump cycle time elapses without completion
@@ -689,6 +691,7 @@ if __name__ == "__main__":
             """Continuously run AI inference on the latest cam1 frame."""
             while True:
                 root_ai_read()
+                time.sleep(0.25)
 
         def test_task():
             """
@@ -707,7 +710,7 @@ if __name__ == "__main__":
                     testfirstrun = True
                     pump_cycle(pump_modifyer)
                     testcheck = ""
-                else:
+                """else:
                      if avg_wet == 0 and moist1 >= 50 and pumpcooldown == False: #If the plant needs water and the plant is not currently in a cycle
                           pumpingstarttime = time.time() #Take a baseline time
                           while time.time() - pumpingstarttime <= 2.5: #For 2.5 seconds
@@ -717,7 +720,7 @@ if __name__ == "__main__":
                           pumpcooldown = True #Start a cooldown to prevent race conditions while the water travels
                      if time.time() - pumpingstarttime >= 5: #End the cooldown after 5 Seconds
                          pumpcooldown = False
-                         pumpingstarttime = 0
+                         pumpingstarttime = 0"""
                 time.sleep(0.25) 
                
         #Continuously grab the latest frame from all 3 cameras into shared variables.
@@ -725,39 +728,39 @@ if __name__ == "__main__":
             global newestframe
             while True:
                 if video_cam1 is None:
-                    time.sleep(.02)
+                    time.sleep(0.05)
                 else:
                     frame = obtain_frame()
                     if frame is not None and video_cam1.isOpened():
                         newestframe = frame
-                        time.sleep(0.02)
+                        time.sleep(0.05)
                     else:
-                        time.sleep(0.02)
+                        time.sleep(0.05)
         def frame_task2():
             global newestframe2
             while True:
                 if video_cam2 is None:
-                    time.sleep(.02)
+                    time.sleep(0.05)
                 else:
                     frame2 = obtain_frame2()
                     if frame2 is not None and video_cam2.isOpened():
                         newestframe2 = frame2
-                        time.sleep(0.02)
+                        time.sleep(0.05)
                     else:
-                        time.sleep(0.02)
+                        time.sleep(0.05)
 
         def frame_task3():
             global newestframe3
             while True:
                 if video_cam3 is None:
-                    time.sleep(.02)
+                    time.sleep(0.05)
                 else:
                     frame3 = obtain_frame3()
                     if frame3 is not None and video_cam3.isOpened():
                         newestframe3 = frame3
-                        time.sleep(0.02)
+                        time.sleep(0.05)
                     else:
-                        time.sleep(0.02)
+                        time.sleep(0.05)
 
         # Create and start all background threads
         sensor_thread = threading.Thread(target=background_sensor_task)
