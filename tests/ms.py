@@ -405,7 +405,7 @@ def local_sensor_record():
     tdsraw = ((tdsvolt / 2.3) * 1000)
     TDS = int(round(tdsraw, 0))
 
-    ph = ph  # Raw pH voltage (calibration handled client-side or elsewhere)
+    ph = ph  # Raw pH voltage (calibration handled if sensor is needed)
 
     visionresult = avg_wet
     # Translate binary AI result to human-readable string
