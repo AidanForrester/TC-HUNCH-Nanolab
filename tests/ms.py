@@ -161,6 +161,12 @@ moist1 = 0
 lasthumid = None
 lasttemp = None
 lastvoc = None
+lastmoist = 0
+lasttds = 0
+lastph = 0
+
+# Lock to prevent concurrent I2C access across threads
+i2c_lock = threading.Lock()
 
 # --- State Variables ---
 manualphoto = False       # Flag to trigger a one-off manual photo
@@ -290,39 +296,53 @@ def sensor_data():
     Flask endpoint that reads all sensors and returns a JSON payload.
     Falls back to last known values if a sensor read fails.
     """
-    global aiword, avg_wet, lasthumid, lasttemp, lastvoc, moist1
-    try:
-        humidity = round(bme680.humidity, 1)
-        lasthumid = humidity
-    except Exception as e:
-        if lasthumid is None:
-            humidity = 0
-        else:
-            humidity = lasthumid
-    try:
-        temperature = round(bme680.temperature, 1)
-        lasttemp = temperature
-    except Exception as e:
-        lasttemp = temperature
-    try:
-        voc = round(bme680.gas, 1) / 1000
-        lastvoc = voc
-    except Exception as e:
-        voc = lastvoc
+    global aiword, avg_wet, lasthumid, lasttemp, lastvoc, lastmoist, lasttds, lastph, moist1
+    with i2c_lock:
+        try:
+            humidity = round(bme680.humidity, 1)
+            lasthumid = humidity
+        except Exception as e:
+            if lasthumid is None:
+                humidity = 0
+            else:
+                humidity = lasthumid
+        try:
+            temperature = round(bme680.temperature, 1)
+            lasttemp = temperature
+        except Exception as e:
+            temperature = lasttemp
+        try:
+            voc = round(bme680.gas, 1) / 1000
+            lastvoc = voc
+        except Exception as e:
+            voc = lastvoc
 
-    # Convert moisture voltage to percentage using calibration bounds
-    moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
+        # Convert moisture voltage to percentage using calibration bounds
+        try:
+            raw_moist = m1.voltage
+            lastmoist = raw_moist
+        except Exception:
+            raw_moist = lastmoist
+        try:
+            tdsvolt = tds.voltage
+            lasttds = tdsvolt
+        except Exception:
+            tdsvolt = lasttds
+        try:
+            ph = pH.voltage
+            lastph = ph
+        except Exception:
+            ph = lastph
+
+    moist1 = round(((raw_moist - maxm1) / (minm1 - maxm1)) * 100, 0)
     if moist1 >= 100:
         moist1 = 100
     if moist1 <= 0:
         moist1 = 0
 
     # Convert TDS voltage to ppm equivalent
-    tdsvolt = tds.voltage
     tdsraw = ((tdsvolt / 2.3) * 1000)
     TDS = int(round(tdsraw, 0))
-
-    ph = pH.voltage  # Raw pH voltage (calibration handled client-side or elsewhere)
 
     visionresult = avg_wet
     # Translate binary AI result to human-readable string
@@ -337,39 +357,55 @@ def local_sensor_record():
     Read all sensors and append a timestamped entry to today's JSON log file.
     Creates the file from scratch if it doesn't exist yet.
     """
-    global aiword, avg_wet, lasthumid, lasttemp, lastvoc
-    try:
-        humidity = round(bme680.humidity, 1)
-        lasthumid = humidity
-    except Exception as e:
-        if lasthumid is None:
-            humidity = 0
-        else:
-            humidity = lasthumid
-    try:
-        temperature = round(bme680.temperature, 1)
-        lasttemp = temperature
-    except Exception as e:
-        lasttemp = temperature
-    try:
-        voc = round(bme680.gas, 1) / 1000
-        lastvoc = voc
-    except Exception as e:
-        voc = lastvoc
+    global aiword, avg_wet, lasthumid, lasttemp, lastvoc, lastmoist, lasttds, lastph
+    with i2c_lock:
+        try:
+            humidity = round(bme680.humidity, 1)
+            lasthumid = humidity
+        except Exception as e:
+            if lasthumid is None:
+                humidity = 0
+            else:
+                humidity = lasthumid
+        try:
+            temperature = round(bme680.temperature, 1)
+            lasttemp = temperature
+        except Exception as e:
+            temperature = lasttemp
+        try:
+            voc = round(bme680.gas, 1) / 1000
+            lastvoc = voc
+        except Exception as e:
+            voc = lastvoc
 
-    # Convert moisture voltage to percentage using calibration bounds
-    moist1 = round(((m1.voltage - maxm1) / (minm1 - maxm1)) * 100, 0)
+        # Convert moisture voltage to percentage using calibration bounds
+        try:
+            raw_moist = m1.voltage
+            lastmoist = raw_moist
+        except Exception:
+            raw_moist = lastmoist
+        try:
+            tdsvolt = tds.voltage
+            lasttds = tdsvolt
+        except Exception:
+            tdsvolt = lasttds
+        try:
+            ph = pH.voltage
+            lastph = ph
+        except Exception:
+            ph = lastph
+
+    moist1 = round(((raw_moist - maxm1) / (minm1 - maxm1)) * 100, 0)
     if moist1 >= 100:
         moist1 = 100
     if moist1 <= 0:
         moist1 = 0
 
     # Convert TDS voltage to ppm equivalent
-    tdsvolt = tds.voltage
     tdsraw = ((tdsvolt / 2.3) * 1000)
     TDS = int(round(tdsraw, 0))
 
-    ph = pH.voltage  # Raw pH voltage (calibration handled client-side or elsewhere)
+    ph = ph  # Raw pH voltage (calibration handled client-side or elsewhere)
 
     visionresult = avg_wet
     # Translate binary AI result to human-readable string
