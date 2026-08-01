@@ -1,11 +1,11 @@
-# Tri County Substrate Nanolab - HUNCH
+# HexaFlow - Tri County Substrate Nanolab - HUNCH
 
 ## Instalation Instructions
 
 This module is written in Python 3.11.9 and HTML/CSS/JAVASCRIPT. The project must not use a new python version for compatibility with the Tesorflow Lite framework. Before completing the following instructions, ensure Python version 3.11.X is installed on the pi, even if a different version came with PI OS.
 
-1. Clone this Repo using `git clone https://github.com/AidanForrester/TC-HUNCH-Nanolab.git/`
-2. Open the project using `cd TC-HUNCH-Nanolab`
+1. Clone this Repo using `git clone https://github.com/AidanForrester/HexaFlow.git/`
+2. Open the project using `cd HexaFlow`
 3. Designate the Dependency Installer an Executable `chmod +x InstallScript.sh`
 4. Run the Install Script `./InstallScript.sh`
 5. Enable I2C Through the PiConfig Menu
@@ -23,4 +23,4 @@ This will install the following dependencies:
 ## Usage Instructions
 
 NeoPixels need sudo permissions in order to run in CircuitPython, so to start the script, use the following command:
-``sudo /home/nanolab/labenv/bin/python /home/nanolab/TC-HUNCH-Nanolab/tests/ms.py``
+``sudo /home/nanolab/labenv/bin/python /home/nanolab/HexaFlow/tests/ms.py``
